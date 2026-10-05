@@ -52,7 +52,11 @@ import com.don.homefitness.data.catalog.MediaResolver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CatalogScreen(viewModel: CatalogViewModel, mediaResolver: MediaResolver) {
+fun CatalogScreen(
+    viewModel: CatalogViewModel,
+    mediaResolver: MediaResolver,
+    onOpenPlans: () -> Unit = {},
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedExercise by remember { mutableStateOf<CatalogExercise?>(null) }
     if (selectedExercise != null) {
@@ -63,7 +67,14 @@ fun CatalogScreen(viewModel: CatalogViewModel, mediaResolver: MediaResolver) {
         )
         return
     }
-    Scaffold(topBar = { TopAppBar(title = { Text("动作库") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("动作库") },
+                actions = { TextButton(onClick = onOpenPlans) { Text("我的计划") } },
+            )
+        },
+    ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
             OutlinedTextField(
                 value = state.query,
