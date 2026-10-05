@@ -146,18 +146,28 @@ private fun PlanEditorScreen(
     }
     var showExercisePicker by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
+    var showExitDialog by remember { mutableStateOf(false) }
+    val initialDraft = remember(initialPlan?.id) {
+        initialPlan?.let { PlanDraft(it.name, it.toDraftExercises()) } ?: PlanDraft("", emptyList())
+    }
+    val currentDraft = PlanDraft(name, selectedExercises)
+
+    fun saveCurrentDraft() {
+        val validation = com.don.homefitness.core.validation.SetValidator.validatePlan(currentDraft)
+        if (validation.isValid) onSave(currentDraft) else validationError = validation.errors.first()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(if (initialPlan == null) "新建计划" else "编辑计划") },
-                navigationIcon = { TextButton(onClick = onCancel) { Text("取消") } },
-                actions = {
+                navigationIcon = {
                     TextButton(onClick = {
-                        val draft = PlanDraft(name, selectedExercises)
-                        val validation = com.don.homefitness.core.validation.SetValidator.validatePlan(draft)
-                        if (validation.isValid) onSave(draft) else validationError = validation.errors.first()
-                    }) { Text("保存") }
+                        if (hasUnsavedChanges(initialDraft, currentDraft)) showExitDialog = true else onCancel()
+                    }) { Text("取消") }
+                },
+                actions = {
+                    TextButton(onClick = ::saveCurrentDraft) { Text("保存") }
                 },
             )
         },
@@ -224,6 +234,22 @@ private fun PlanEditorScreen(
             }
             item { Button(onClick = { showExercisePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("添加动作") } }
         }
+    }
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text("有未保存的修改") },
+            text = { Text("是否保存当前计划后退出？") },
+            confirmButton = {
+                TextButton(onClick = { showExitDialog = false; saveCurrentDraft() }) { Text("保存") }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { showExitDialog = false; onCancel() }) { Text("放弃") }
+                    TextButton(onClick = { showExitDialog = false }) { Text("继续编辑") }
+                }
+            },
+        )
     }
     if (showExercisePicker) {
         AlertDialog(

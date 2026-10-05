@@ -14,14 +14,22 @@
     "status": "executed-no-missing-files"
   },
   "apk": {
-    "sizeBytes": null,
-    "status": "not-measured"
+    "sizeBytes": 161980227,
+    "sha256": "b9984937c2f4ba601404991f435f4abf3ea81b3030ac7e18be4afc49d1594cd2",
+    "status": "measured-debug-apk"
   },
   "runtime": {
-    "thumbnailLoadMs": null,
-    "gifLoadMs": null,
-    "memoryBytes": null,
-    "status": "not-measured"
+    "device": "Android emulator-5554, API 36, arm64; airplane_mode_on=1",
+    "startupMs": 1111,
+    "thumbnailLoadMsMax": 229,
+    "gifLoadMsMax": 15,
+    "memoryPssKb": {
+      "listSample": 252774,
+      "detailSample": 142594,
+      "backgroundSample": 143494
+    },
+    "lifecycle": "pause and loader release observed in logcat",
+    "status": "measured-samples-not-benchmark"
   },
   "authorization": {
     "localCopy": "recorded-from-upstream-notice",

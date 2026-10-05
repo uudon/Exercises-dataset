@@ -1,8 +1,8 @@
 {
   "sourceCommit": "7455efae41b330c265e7cd4b78dfa848e7ce5ebd",
   "artifact": "app/build/outputs/apk/debug/app-debug.apk",
-  "apkSizeBytes": 161830068,
-  "apkSha256": "cd070660c8f9560145d865ff9c6c4a4ae2d8a4645341e7e60408ff1395460bcb",
+  "apkSizeBytes": 161980227,
+  "apkSha256": "b9984937c2f4ba601404991f435f4abf3ea81b3030ac7e18be4afc49d1594cd2",
   "media": {
     "imageCount": 1324,
     "gifCount": 1324,
@@ -13,10 +13,19 @@
     "sha256Validation": "executed-no-mismatch"
   },
   "runtime": {
-    "thumbnailLoadMs": null,
-    "gifLoadMs": null,
-    "memoryBytes": null,
-    "status": "not-measured"
+    "measurementDevice": "Android emulator-5554, API 36, arm64; airplane_mode_on=1",
+    "startupMs": 1111,
+    "thumbnailLoadMsSamples": [64, 75, 86, 89, 97, 104, 106, 111, 114, 117, 128, 133, 147, 154, 218, 220, 229],
+    "thumbnailLoadMsMax": 229,
+    "gifLoadMsSamples": [15],
+    "gifLoadMsMax": 15,
+    "memoryPssKb": {
+      "listSample": 252774,
+      "detailSample": 142594,
+      "backgroundSample": 143494
+    },
+    "lifecycleLog": "gif paused and gif loader released observed after HOME",
+    "status": "measured-samples-not-benchmark"
   },
   "authorization": {
     "localCopy": "recorded-from-upstream-notice",

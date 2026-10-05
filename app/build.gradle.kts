@@ -51,6 +51,11 @@ tasks.register<Exec>("verifyMediaResources") {
     commandLine("bash", "tools/verify-media-resources.sh")
 }
 
+tasks.register<Exec>("verifyOfflineContract") {
+    workingDir(rootProject.projectDir)
+    commandLine("bash", "tools/verify-offline-contract.sh")
+}
+
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
 

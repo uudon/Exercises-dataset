@@ -1,5 +1,7 @@
 package com.don.homefitness.feature.catalog
 
+import android.os.SystemClock
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -219,8 +221,14 @@ private fun ExerciseDetailScreen(
 @Composable
 private fun LocalAssetImage(path: String, contentDescription: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val requestStartedAt = remember(path) { SystemClock.elapsedRealtime() }
     AsyncImage(
-        model = ImageRequest.Builder(context).data(assetUri(path)).build(),
+        model = ImageRequest.Builder(context)
+            .data(assetUri(path))
+            .listener(onSuccess = { _, _ ->
+                Log.i("MediaTiming", "thumbnail path=$path loadMs=${SystemClock.elapsedRealtime() - requestStartedAt}")
+            })
+            .build(),
         contentDescription = contentDescription,
         modifier = modifier,
     )
@@ -237,7 +245,10 @@ private fun LocalGifImage(path: String, contentDescription: String, modifier: Mo
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> isResumed = true
-                Lifecycle.Event.ON_PAUSE -> isResumed = false
+                Lifecycle.Event.ON_PAUSE -> {
+                    isResumed = false
+                    Log.i("MediaTiming", "gif paused path=$path")
+                }
                 else -> Unit
             }
         }
@@ -245,16 +256,25 @@ private fun LocalGifImage(path: String, contentDescription: String, modifier: Mo
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     if (isResumed) {
+        val requestStartedAt = remember(path) { SystemClock.elapsedRealtime() }
         val imageLoader = remember(context) {
             ImageLoader.Builder(context)
                 .components { add(GifDecoder.Factory()) }
                 .build()
         }
         DisposableEffect(imageLoader) {
-            onDispose { imageLoader.shutdown() }
+            onDispose {
+                imageLoader.shutdown()
+                Log.i("MediaTiming", "gif loader released path=$path")
+            }
         }
         AsyncImage(
-            model = ImageRequest.Builder(context).data(assetUri(path)).build(),
+            model = ImageRequest.Builder(context)
+                .data(assetUri(path))
+                .listener(onSuccess = { _, _ ->
+                    Log.i("MediaTiming", "gif path=$path loadMs=${SystemClock.elapsedRealtime() - requestStartedAt}")
+                })
+                .build(),
             imageLoader = imageLoader,
             contentDescription = contentDescription,
             contentScale = ContentScale.Fit,
