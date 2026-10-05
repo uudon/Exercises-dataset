@@ -19,7 +19,7 @@
 - 默认中文；动作 ID 使用 String，保留前导零；个人记录以 UUID 标识。
 - 哑铃重量按单只记录，输入文案为“单只重量（kg）”；不自动乘以 2。
 - 同时支持次数与时长；计划目标与实际成绩独立保存。
-- 开源媒体未确认适用授权前不得随 APK 分发或从仓库在线加载。
+- 开源动作数据、图片和 GIF 的目标接入方式是全部随 APK 本地打包；不得依赖远程 URL、在线接口或 CDN。Gym visual 的本地复制和随 APK 分发授权必须单独记录，授权未确认或资源检查未完成时阻塞发布，不得将检查未执行写成通过。
 - 本次只交付文档，不创建外部项目，不编写产品代码。
 
 ## Review Focus
@@ -29,6 +29,8 @@
 3. 徒手动作实际需要单杠或训练凳：必须额外标注，不能作为无设备家庭动作展示。
 4. 时间和时区变化：历史保留训练时的本地日期，休息计时不因手动改时钟出现负值。
 5. 备份损坏、版本不支持或中途失败：导入前校验，失败不改变现有数据。
+6. 媒体资源：首次离线启动即可读取本地缩略图和本地 GIF；动作 ID、资源路径、文件存在性、文件损坏和版权署名均可追溯。
+7. 生命周期和升级：GIF 只在详情页可见时播放，离开页面或进入后台后停止并释放；新版 APK 更新媒体不得覆盖计划、训练记录和历史。
 
 ---
 
@@ -50,23 +52,32 @@
 
 来源：https://github.com/hasaneyldrm/exercises-dataset
 
-已查阅仓库 README、NOTICE：README 描述约 1,324 个动作、中文说明、肌肉及器械字段和 180×180 图片/GIF。尚未逐条核验 JSON、实际资产数量和中文质量；实施前以固定 commit 的实际数据为准，不将 README 数量写成导入成功断言。
+已查阅仓库 README、NOTICE：README 描述约 1,324 个动作、中文说明、肌肉及器械字段和 180×180 图片/GIF。工程必须在固定 commit 上复制动作数据、图片和 GIF 到 APK 本地 assets 或等价本地资源包；实际文件数量、总大小、映射关系和损坏检查以资源校验报告为准，不将 README 数量写成导入成功断言。
 
 | 资源 | 用途 | 接入规则 |
 | --- | --- | --- |
 | data/exercises.json | 动作目录 | 读取 ID、name、equipment、body_part、target、secondary_muscles、中文说明 |
 | instruction_steps.zh | 分步详情 | 存在且有效时使用；否则展示 instructions.zh；两者均缺失时提示暂无中文说明 |
 | exercises.schema.json | 数据校验参考 | 读取实际 schema 后建立导入验证 |
-| images、videos | 动作示范 | 授权核实后接入；videos 中资源实际为 GIF，不按普通视频处理 |
+| images、videos | 动作示范 | 首期即复制全部本地图片和 GIF；列表只读取缩略图，详情按动作 ID 读取 GIF；videos 中资源实际为 GIF，不按普通视频处理 |
 | LICENSE、NOTICE.md | 来源与许可 | 保留许可说明、来源、版本和署名 |
 
-数据及说明采用 MIT；图片/GIF 属于 Gym visual，仓库再分发许可不等于本 App 已取得授权。授权未确认时使用文字及通用占位图；确认后保留 © Gym visual — https://gymvisual.com/ 署名并遵守适用分辨率条款。不得用放大或 AI 重制规避授权。
+数据及说明采用 MIT；图片/GIF 属于 Gym visual，仓库再分发许可不等于本 App 已取得本地复制和 APK 分发授权。资源接入清单必须单独记录授权主体、授权范围、分辨率限制、署名文本、授权凭证位置、核验人和核验日期。目标方案是本地媒体，不是占位图或在线降级；授权未确认时构建和发布状态为阻塞/未验收，不得报告媒体功能通过。不得用放大或 AI 重制规避授权。
 
 许可原文：https://github.com/hasaneyldrm/exercises-dataset/blob/main/NOTICE.md
 
+### 媒体授权与资源发布门槛
+
+| 项目 | 当前状态 | 发布要求 |
+| --- | --- | --- |
+| 数据/说明文本 MIT | 依据上游 LICENSE 待随固定 commit 归档 | 保留 LICENSE 和来源 commit |
+| 图片/GIF 本地复制 | 未执行 | 逐文件复制、校验并写入 media-manifest |
+| 图片/GIF 随 APK 分发 | 未确认 | 记录 Gym visual 授权凭证、范围、署名和限制；未确认则阻塞发布 |
+| 资源完整性和体积 | 未执行 | 生成实际数量、总大小、缺失/损坏、APK体积、耗时和内存报告 |
+
 增加独立 overlay 文件补充 nameZh、aliasesZh、requiredEquipment、homeEligible、reviewStatus。禁止修改源数据来假装这些字段原本存在。家庭列表采用经过人工审核的白名单，不仅凭 equipment=body weight 判断；需要单杠、训练凳等动作在未声明具备对应设备时隐藏。先整理 30—50 个常用候选动作供人工审核，不将此数字设为训练处方。
 
-数据版本清单记录 commit SHA、校验摘要、导入日期、导入数量、审核数量及排除原因。中文名称、说明和动作匹配需人工检查。首期不提供未经审核的预设训练课程。
+数据版本清单记录 commit SHA、校验摘要、导入日期、导入数量、审核数量及排除原因；媒体清单另记录图片数量、GIF 数量、总字节数、每个动作 ID 的资源路径、缺失/损坏文件和授权状态。打包前必须生成资源校验报告，校验动作与媒体一一对应、路径在 APK 内有效、文件可解码且无远程 URL。中文名称、说明和动作匹配需人工检查。首期不提供未经审核的预设训练课程。
 
 ## 3. 页面和交互规格
 
@@ -76,7 +87,7 @@
 | --- | --- | --- |
 | 训练首页 | 活动训练、计划列表 | 活动训练存在时优先显示“继续训练”；其他计划不能另开活动训练 |
 | 动作库 | 名称、部位、器械、收藏 | 中文别名或英文搜索；部位和器械条件取交集；无结果可清空筛选 |
-| 动作详情 | 步骤、目标肌肉、器械、来源 | 收藏；加入计划；媒体不可用时仍可读说明 |
+| 动作详情 | 步骤、目标肌肉、器械、来源、本地 GIF | 收藏；加入计划；按动作 ID 播放本地 GIF；媒体异常时显示明确错误和文字说明 |
 | 计划编辑 | 名称、动作及目标组 | 通过上移/下移调整顺序；删除计划不删除历史 |
 | 训练执行 | 当前动作、上次成绩、当前组 | 手动确认保存每组；保存成功后开始休息；可跳过、返回修改 |
 | 训练结束 | 已完成组、训练总用时 | 有已完成组才可完成；空训练可取消；总用时不宣称等于运动时长 |
@@ -124,14 +135,15 @@
 | feature/backup/BackupService.kt、BackupDocument.kt、BackupScreen.kt | 文件导出、验证和恢复 |
 | core/model/SetMode.kt、WeightUnit.kt、core/validation/SetValidator.kt | 公共类型及输入规则 |
 | app/src/main/assets/catalog/exercises.json、exercise-overlay.json、source-manifest.json | 固定版本数据与审核补充 |
+| app/src/main/assets/catalog/images/、videos/、media-manifest.json、media-check-report.json | 全部本地缩略图/GIF、ID 映射、授权状态和打包前校验结果 |
 
-可选媒体模块仅在授权确认后增加 MediaResolver 和独立媒体包。不对整个动作列表自动播放 GIF；仅详情页当前可见媒体播放，离开后释放资源。
+媒体模块是一期动作库的一部分：MediaResolver 只接受本地动作 ID，不接受远程 URL；列表使用本地缩略图，详情页当前可见时播放本地 GIF。离开详情页、切换动作、进入后台或生命周期停止时停止播放并释放解码资源；列表禁止自动播放 GIF。图片和 GIF 随新版 APK 更新，静态资源升级不得覆盖 Room 中的计划、训练记录和历史。
 
 ## 6. 构建基线和质量原则
 
 建议 minSdk 24，其余 JDK、AGP、Gradle、Kotlin、compileSdk、targetSdk 和库版本在开工时核对官方兼容性及发布要求，写入 docs/dependency-baseline.md；当前文档不声称具体版本是最新。使用项目 Gradle Wrapper，依赖版本集中管理，不使用动态版本。
 
-功能逻辑以有意义的测试先行；每项先看到预期断言失败，再最小实现、运行通过。纯文案、颜色和布局调整以人工/界面验证为主，不写镜像实现的单元测试。
+功能逻辑和资源校验以有意义的测试先行；每项先看到预期断言失败，再最小实现、运行通过。每次打包都生成实际资源数量、总大小、缺失/损坏文件、APK 体积和关键加载耗时报告；不得凭空估算图片/GIF 数量、包体或内存。纯文案、颜色和布局调整以人工/界面验证为主，不写镜像实现的单元测试。
 
 ## 7. 迭代总览
 
@@ -144,7 +156,7 @@
 | 5 健身房目录 | 器械筛选与场景切换 | 一期验收 | 3—5 人日 |
 | 6 健身房体验 | 替换动作、单位切换、趋势 | 迭代 5 | 4—6 人日 |
 
-估算为规划值，含研发和验证，不是承诺日期；不含媒体购买等待、专业内容审核等待和上架审核。每期结束根据实际问题更新后续估算。
+估算为规划值，含研发和验证，不是承诺日期；媒体资源复制、逐文件校验、包体/性能测量和授权核验必须纳入实际工作量，等待外部授权或专业内容审核的时间单独记录。每期结束根据实际问题更新后续估算。
 
 ## 8. 一期实施任务
 
@@ -152,20 +164,21 @@
 
 ### 迭代 1 / Task 1：工程、数据导入与家庭筛选
 
-**Files:** 创建 App.kt、MainActivity.kt、navigation/AppNavHost.kt、data/catalog/ExerciseDto.kt、CatalogImporter.kt、CatalogRepository.kt、data/db/FitnessDatabase.kt 及动作/收藏 entity 与 dao；创建三个 catalog assets；测试 CatalogImporterTest.kt、HomeEligibilityTest.kt、CatalogDaoTest.kt。
+**Files:** 创建 App.kt、MainActivity.kt、navigation/AppNavHost.kt、data/catalog/ExerciseDto.kt、CatalogImporter.kt、CatalogRepository.kt、MediaResolver.kt、data/db/FitnessDatabase.kt 及动作/收藏 entity 与 dao；创建 catalog 数据、images、videos、media-manifest.json、source-manifest.json 和资源校验报告；测试 CatalogImporterTest.kt、HomeEligibilityTest.kt、CatalogDaoTest.kt、MediaManifestTest.kt、MediaLifecycleTest.kt。
 
 **Interfaces:** 输入固定版本 JSON、overlay、用户设备集合 Set<String>。输出 suspend fun importCatalog(json: String, overlay: String): ImportResult；fun observeExercises(query: String, bodyPart: String?, equipment: String?, availableEquipment: Set<String>): Flow<List<Exercise>>；suspend fun setFavorite(exerciseId: String, favorite: Boolean)。ImportResult 含 acceptedCount、rejectedCount、errors，重复 ID 使整次导入失败。
 
-- [ ] 核对工程、AGENTS.md、构建基线和 Wrapper；记录数据 commit、实际字段、资源许可及家庭白名单审核结果。
+- [ ] 核对工程、AGENTS.md、构建基线和 Wrapper；锁定数据 commit，复制全部 images/videos，统计实际数量与总大小，记录资源许可、授权状态及家庭白名单审核结果。
 - [ ] 写失败测试：保留 id="0001"；重复 ID 导入拒绝且数据库不变；中文步骤缺失退回段落；需要单杠动作在设备仅徒手/哑铃时不出现；两个筛选条件取交集。
 - [ ] 运行 ./gradlew :app:testDebugUnitTest --tests '*CatalogImporterTest' --tests '*HomeEligibilityTest'，确认因预期业务缺失失败，不能把 SDK 缺失视为红灯测试成功。
-- [ ] 实现上述接口及原子导入；数据库版本 1；目录首次导入成功后才标记完成，更新只替换目录，不覆盖用户收藏。
+- [ ] 实现上述接口及原子导入；数据库版本 1；目录首次导入成功后才标记完成，更新只替换目录，不覆盖用户收藏；MediaResolver 只通过动作 ID 解析 APK 内路径。
 - [ ] 运行同一单测命令通过；执行 ./gradlew :app:connectedDebugAndroidTest 验证导入事务和收藏持久化。
-- [ ] 实现动作列表、详情、中文搜索和收藏；无结果、无中文说明、无媒体均有可用状态。
-- [ ] 设备验证离线首次启动、搜索、清空筛选、收藏重启保存、大字体详情；抽检白名单的设备标注和中文名称。
-- [ ] ./gradlew :app:assembleDebug :app:lintDebug 通过；提交 feat: add offline home exercise catalog。
+- [ ] 实现动作列表本地缩略图、详情本地 GIF、中文搜索和收藏；列表不自动播放 GIF；详情媒体异常时显示错误和文字说明。
+- [ ] 生成资源校验报告：动作与图片/GIF 一一对应、路径无误、文件可解码、无缺失/损坏/远程 URL，并记录实际数量、总大小、APK 体积、加载耗时和内存观测值。
+- [ ] 设备验证飞行模式首次启动、搜索、清空筛选、收藏重启保存、本地缩略图、本地 GIF、离开详情/进入后台停止播放、大字体详情；抽检白名单设备标注和中文名称。
+- [ ] ./gradlew :app:assembleDebug :app:lintDebug 通过；媒体授权状态、资源校验报告和测试证据齐全后，提交 feat: add offline home exercise catalog。
 
-**验收:** 家庭列表中不存在未经审核或缺少设备的动作；动作数据版本可追溯；授权未确认时 APK 不含开源媒体。
+**验收:** 家庭列表中不存在未经审核或缺少设备的动作；动作数据和全部本地媒体版本可追溯；列表显示本地缩略图、详情播放本地 GIF；飞行模式首次启动可用；资源校验报告无未处理缺失/损坏/路径错误；授权状态已单独记录。任何未执行的检查保持未执行，不得标记通过。
 
 ### 迭代 2 / Task 2：计划编辑与复制
 
@@ -215,7 +228,7 @@
 
 **Files:** 创建 feature/backup/BackupService.kt、BackupDocument.kt、BackupScreen.kt；测试 BackupValidationTest.kt、BackupRestoreTest.kt；增加 docs/backup-format.md。
 
-**Interfaces:** suspend fun exportBackup(output: OutputStream)；suspend fun validateBackup(input: InputStream): ValidatedBackup；suspend fun restoreBackup(backup: ValidatedBackup)。备份 formatVersion=1，包含用户设置、收藏、计划、历史和必要名称快照，不包含第三方媒体和活动训练。
+**Interfaces:** suspend fun exportBackup(output: OutputStream)；suspend fun validateBackup(input: InputStream): ValidatedBackup；suspend fun restoreBackup(backup: ValidatedBackup)。备份 formatVersion=1，包含用户设置、收藏、计划、历史和必要名称快照，不包含静态图片/GIF（静态媒体由新版 APK 提供），也不包含活动训练。
 
 - [ ] 写失败测试：损坏 JSON、重复 UUID、悬空关系、未知 formatVersion 均拒绝且原数据库不变；文件导出后恢复数量及实际成绩相同。
 - [ ] 运行 ./gradlew :app:testDebugUnitTest --tests '*BackupValidationTest' 确认失败；实现格式校验。
@@ -232,7 +245,7 @@
 
 **Files:** 修改 CatalogRepository.kt、CatalogViewModel.kt、exercise-overlay.json；新增 core/model/TrainingLocation.kt、feature/settings/EquipmentSettingsScreen.kt；测试 CatalogLocationTest.kt、CatalogUpdateTest.kt。
 
-**Interfaces:** TrainingLocation=HOME/GYM；Task 1 observeExercises 增加 location: TrainingLocation；家庭模式仍以已审核白名单和家庭可用设备筛选，健身房模式以器械类别查询。
+**Interfaces:** TrainingLocation=HOME/GYM；Task 1 observeExercises 增加 location: TrainingLocation；家庭模式仍以已审核白名单和家庭可用设备筛选，健身房模式以器械类别查询。健身房动作的图片/GIF已在首期 APK 本地资源包中，二期只开放入口和筛选，不新增联网媒体下载路径。
 
 - [ ] 锁定新的源数据版本，审核新增器械中文映射；保留同一 exerciseId，不重复创建家庭动作。
 - [ ] 写失败测试：家庭模式不混入固定器械；切换健身房可查询杠铃/绳索等；目录升级不改用户记录；被移除动作保留历史快照。
@@ -297,7 +310,7 @@
 - [ ] 确定目标 Android 仓库/工程和执行方式。
 - [ ] 核对工程版本、包名、AGENTS.md 和可运行的设备环境。
 - [ ] 固定源数据版本，完成首批家庭动作人工审核。
-- [ ] 确认媒体授权状态；未确认则使用无媒体方案。
+- [ ] 确认本地复制与 APK 分发的媒体授权状态；生成资源数量/大小/完整性报告；未确认或未执行时保持阻塞/未验收，不得改写成“无媒体方案”或“通过”。
 
 建议首先执行迭代 1，不提前铺设二期页面。迭代 1 验收后再进入计划编辑；一期全部验收后才开放健身房范围。
 

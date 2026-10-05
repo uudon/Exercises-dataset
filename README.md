@@ -2,7 +2,7 @@
 
 一个面向个人使用的中文家庭健身 Android 应用，按 `doc/健身App_需求设计与分迭代开发计划.md` 逐期实施。
 
-当前正在实现一期 Task 1：离线动作库。项目接入上游动作文本数据，但暂不打包 Gym visual 图片/GIF，详见 `app/src/main/assets/catalog/NOTICE.md`。
+当前正在实现一期 Task 1：离线动作库。目标是将上游全部动作数据、图片和 GIF 随 APK 本地提供；本地复制、资源校验和 Gym visual 的 APK 分发授权仍按文档清单执行，未执行项不会标记为通过。许可说明见 `app/src/main/assets/catalog/NOTICE.md`。
 
 技术栈：
 
