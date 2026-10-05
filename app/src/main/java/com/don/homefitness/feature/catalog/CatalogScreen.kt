@@ -1,6 +1,7 @@
 package com.don.homefitness.feature.catalog
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.clickable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -31,10 +33,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
@@ -175,7 +179,10 @@ private fun ExerciseDetailScreen(
                     LocalGifImage(
                         path = gifPath,
                         contentDescription = "${exercise.nameZh} 动作示范",
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                            .clip(MaterialTheme.shapes.large),
                     )
                 }
                 Text("动作步骤", modifier = Modifier.padding(top = 20.dp), style = MaterialTheme.typography.titleLarge)
@@ -239,7 +246,11 @@ private fun LocalGifImage(path: String, contentDescription: String, modifier: Mo
             model = ImageRequest.Builder(context).data(assetUri(path)).build(),
             imageLoader = imageLoader,
             contentDescription = contentDescription,
-            modifier = modifier,
+            contentScale = ContentScale.Fit,
+            modifier = modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow),
         )
     } else {
         Text("动作详情可见时播放本地 GIF", modifier = modifier.padding(8.dp))
