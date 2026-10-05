@@ -6,8 +6,12 @@ import com.don.homefitness.data.catalog.CatalogImporter
 import com.don.homefitness.data.catalog.CatalogRepository
 import com.don.homefitness.data.db.FitnessDatabase
 import com.don.homefitness.data.db.MIGRATION_1_2
+import com.don.homefitness.data.db.MIGRATION_2_3
+import com.don.homefitness.data.db.MIGRATION_3_4
 import com.don.homefitness.data.catalog.MediaResolver
 import com.don.homefitness.feature.plan.PlanRepository
+import com.don.homefitness.feature.training.TrainingRepository
+import com.don.homefitness.feature.history.HistoryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,6 +23,7 @@ class App : Application() {
     val database: FitnessDatabase by lazy {
         Room.databaseBuilder(this, FitnessDatabase::class.java, "home-fitness.db")
             .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
             .build()
     }
 
@@ -32,6 +37,8 @@ class App : Application() {
     }
 
     val planRepository: PlanRepository by lazy { PlanRepository(database) }
+    val trainingRepository: TrainingRepository by lazy { TrainingRepository(database, planRepository) }
+    val historyRepository: HistoryRepository by lazy { HistoryRepository(trainingRepository, planRepository) }
 
     override fun onCreate() {
         super.onCreate()

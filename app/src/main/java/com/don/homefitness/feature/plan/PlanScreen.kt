@@ -43,6 +43,7 @@ import java.util.Locale
 fun PlanScreen(
     planRepository: PlanRepository,
     catalogRepository: CatalogRepository,
+    onStart: (String) -> Unit = {},
     onBack: () -> Unit,
 ) {
     val planViewModel: PlanViewModel = viewModel(factory = PlanViewModelFactory(planRepository))
@@ -111,6 +112,7 @@ fun PlanScreen(
                             Text("${plan.exercises.size} 个动作", modifier = Modifier.padding(top = 4.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                                 TextButton(onClick = { editingPlan = plan }) { Text("编辑") }
+                                TextButton(onClick = { onStart(plan.id) }) { Text("开始训练") }
                                 TextButton(onClick = { planViewModel.duplicate(plan.id) { error = it } }) { Text("复制") }
                                 TextButton(onClick = { planViewModel.delete(plan.id) { error = it } }) { Text("删除") }
                             }

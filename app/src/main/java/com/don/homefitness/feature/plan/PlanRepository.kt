@@ -32,6 +32,8 @@ class PlanRepository(private val database: FitnessDatabase) {
         plans.map { plan -> loadPlan(plan) }
     }
 
+    suspend fun getPlan(planId: String): WorkoutPlan? = dao.findPlan(planId)?.let { loadPlan(it) }
+
     suspend fun duplicatePlan(planId: String): String {
         val original = loadPlan(dao.findPlan(planId) ?: error("计划不存在"))
         val duplicate = PlanDraft(
@@ -70,6 +72,11 @@ class PlanRepository(private val database: FitnessDatabase) {
         val existing = dao.findPlan(planId) ?: error("计划不存在")
         val now = System.currentTimeMillis()
         savePlanInternal(planId, draft, existing.createdAt, now)
+    }
+
+    suspend fun replacePlanExercise(planExerciseId: String, newExerciseId: String, targetConfirmed: Boolean) {
+        require(targetConfirmed) { "动作替换需要重新确认训练目标" }
+        dao.replaceExercise(planExerciseId, newExerciseId)
     }
 
     private suspend fun savePlanInternal(planId: String, draft: PlanDraft, createdAt: Long, updatedAt: Long) {

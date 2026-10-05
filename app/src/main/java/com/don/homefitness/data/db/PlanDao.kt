@@ -40,4 +40,7 @@ interface PlanDao {
 
     @Query("DELETE FROM workout_plans WHERE id = :planId")
     suspend fun deletePlan(planId: String)
+
+    @Query("UPDATE plan_exercises SET exerciseId = :exerciseId WHERE id = :planExerciseId")
+    suspend fun replaceExercise(planExerciseId: String, exerciseId: String)
 }

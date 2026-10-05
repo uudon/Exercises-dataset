@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
         val app = application as App
         setContent {
             HomeFitnessTheme {
-                AppNavHost(app.catalogRepository, app.mediaResolver, app.planRepository)
+                AppNavHost(app.catalogRepository, app.mediaResolver, app.planRepository, app.trainingRepository, app.historyRepository)
             }
         }
     }
