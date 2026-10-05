@@ -27,4 +27,10 @@ interface ExerciseDao {
 
     @Query("SELECT exerciseId FROM exercise_favorites")
     fun observeFavoriteIds(): Flow<List<String>>
+    @Query("SELECT exerciseId FROM exercise_favorites")
+    suspend fun allFavoriteIds(): List<String>
+    @Query("DELETE FROM exercise_favorites")
+    suspend fun deleteAllFavorites()
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertFavorites(favorites: List<FavoriteEntity>)
 }

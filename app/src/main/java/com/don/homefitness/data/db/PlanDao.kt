@@ -13,6 +13,12 @@ import kotlinx.coroutines.flow.Flow
 interface PlanDao {
     @Query("SELECT * FROM workout_plans ORDER BY updatedAt DESC")
     fun observePlans(): Flow<List<WorkoutPlanEntity>>
+    @Query("SELECT * FROM workout_plans")
+    suspend fun allPlans(): List<WorkoutPlanEntity>
+    @Query("SELECT * FROM plan_exercises")
+    suspend fun allExercises(): List<PlanExerciseEntity>
+    @Query("SELECT * FROM planned_sets")
+    suspend fun allSets(): List<PlannedSetEntity>
 
     @Query("SELECT * FROM workout_plans WHERE id = :planId")
     suspend fun findPlan(planId: String): WorkoutPlanEntity?
@@ -40,6 +46,12 @@ interface PlanDao {
 
     @Query("DELETE FROM workout_plans WHERE id = :planId")
     suspend fun deletePlan(planId: String)
+    @Query("DELETE FROM planned_sets")
+    suspend fun deleteAllSets()
+    @Query("DELETE FROM plan_exercises")
+    suspend fun deleteAllExercises()
+    @Query("DELETE FROM workout_plans")
+    suspend fun deleteAllPlans()
 
     @Query("UPDATE plan_exercises SET exerciseId = :exerciseId WHERE id = :planExerciseId")
     suspend fun replaceExercise(planExerciseId: String, exerciseId: String)

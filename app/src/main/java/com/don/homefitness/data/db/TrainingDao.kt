@@ -18,10 +18,18 @@ interface TrainingDao {
     suspend fun findActive(): WorkoutSessionEntity?
     @Query("SELECT * FROM workout_sessions WHERE id = :id")
     suspend fun findSession(id: String): WorkoutSessionEntity?
+    @Query("SELECT * FROM workout_sessions")
+    suspend fun allSessions(): List<WorkoutSessionEntity>
+    @Query("SELECT * FROM session_exercises")
+    suspend fun allSessionExercises(): List<SessionExerciseEntity>
+    @Query("SELECT * FROM session_sets")
+    suspend fun allSessionSets(): List<SessionSetEntity>
     @Query("SELECT s.id, s.planNameSnapshot, s.status, s.startedAt, s.localDate, COUNT(CASE WHEN x.status = 'COMPLETED' THEN 1 END) AS completedSets FROM workout_sessions s LEFT JOIN session_exercises e ON e.sessionId=s.id LEFT JOIN session_sets x ON x.sessionExerciseId=e.id GROUP BY s.id ORDER BY s.startedAt DESC")
     fun observeHistory(): Flow<List<SessionSummaryRow>>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSession(session: WorkoutSessionEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertSessions(sessions: List<WorkoutSessionEntity>)
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertExercises(exercises: List<SessionExerciseEntity>)
     @Insert(onConflict = OnConflictStrategy.ABORT)

@@ -12,10 +12,13 @@ data class BackupDocument(
 )
 
 @Serializable
-data class BackupPlan(val id: String, val name: String, val exerciseIds: List<String>)
+data class BackupPlan(val id: String, val name: String, val exerciseIds: List<String>, val sets: List<BackupPlannedSet> = emptyList())
 
 @Serializable
-data class BackupSession(val id: String, val planNameSnapshot: String, val status: String, val startedAt: Long)
+data class BackupPlannedSet(val exerciseId: String, val position: Int, val mode: String, val targetReps: Int?, val targetSeconds: Int?, val targetWeightGrams: Long?, val restSeconds: Int)
+
+@Serializable
+data class BackupSession(val id: String, val planNameSnapshot: String, val status: String, val startedAt: Long, val finishedAt: Long? = null, val localDate: String = "", val zoneId: String = "")
 
 data class ValidatedBackup(val document: BackupDocument)
 
