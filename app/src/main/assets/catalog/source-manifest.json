@@ -1,0 +1,14 @@
+{
+  "sourceRepository": "https://github.com/hasaneyldrm/exercises-dataset",
+  "sourceCommit": "7455efae41b330c265e7cd4b78dfa848e7ce5ebd",
+  "importedAt": "2026-10-05",
+  "sourceExerciseCount": 1324,
+  "acceptedExerciseCount": 45,
+  "acceptedIdsAreOverlayControlled": true,
+  "mediaIncluded": false,
+  "mediaReason": "Gym visual media license is separate from the MIT data license; this release keeps text-only detail rendering until reuse rights are confirmed.",
+  "exercisesSha256": "656634224b8977b99a6d765470ee123260d4979715eaa4e7c0b7c8bb0d79f93d",
+  "schemaSha256": "33fb14b439c68e12365e14a0759006c40564646ac27084efe1f2e956804b2d49",
+  "licenseFiles": ["LICENSE", "NOTICE.md"],
+  "licenseSummary": "Exercise metadata, structure and instruction text are MIT; images and GIFs remain Gym visual media with separate terms."
+}
