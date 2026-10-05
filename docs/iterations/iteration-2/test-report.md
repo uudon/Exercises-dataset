@@ -2,6 +2,8 @@
 
 日期：2026-10-05。状态：核心验证通过，未宣称二期所有手工边界验收通过。
 
+交付 commit：`9335992 fix: complete iteration todo verification`。
+
 | 检查项 | 实际结果 | 状态 | 证据 |
 | --- | --- | --- | --- |
 | TDD 首次失败测试 | `SetValidatorTest` 首次运行因模型/校验器尚不存在而编译失败，符合 RED 阶段 | 通过（过程证据） | 终端 Gradle 输出 |

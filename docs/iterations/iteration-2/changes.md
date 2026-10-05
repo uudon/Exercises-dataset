@@ -10,6 +10,7 @@
 - 新增 SetValidator 单元测试和 PlanRepository 设备测试。
 - 增加 v1→v2 收藏保留仪器测试，并在 emulator-5554 通过。
 - 增加未保存退出的保存/放弃/继续编辑确认及纯逻辑测试。
+- TODO 验证与报告更新提交：`9335992 fix: complete iteration todo verification`。
 
 ## 未完成或待验证
 

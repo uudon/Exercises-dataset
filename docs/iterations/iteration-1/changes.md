@@ -11,6 +11,7 @@
 - 增加 `verifyMediaResources` Gradle 任务和实际资源报告。
 - 增加 `verifyOfflineContract` 离线契约检查；生产代码仅通过 APK assets 读取媒体。
 - 在 API 36 模拟器飞行模式下完成启动、缩略图、GIF、后台 pause/release 和性能样本验证。
+- TODO 验证与报告更新提交：`9335992 fix: complete iteration todo verification`。
 - 提交：`751715a feat: add offline local exercise media`。
 
 ## 未完成
