@@ -1,0 +1,30 @@
+{
+  "sourceCommit": "7455efae41b330c265e7cd4b78dfa848e7ce5ebd",
+  "generatedAt": "2026-10-05T06:20:45Z",
+  "sourceExerciseCount": 1324,
+  "media": {
+    "imageCount": 1324,
+    "gifCount": 1324,
+    "imageBytes": 8875057,
+    "gifBytes": 128741397
+  },
+  "mapping": {
+    "missingImages": 0,
+    "missingGifs": 0,
+    "status": "executed-no-missing-files"
+  },
+  "apk": {
+    "sizeBytes": null,
+    "status": "not-measured"
+  },
+  "runtime": {
+    "thumbnailLoadMs": null,
+    "gifLoadMs": null,
+    "memoryBytes": null,
+    "status": "not-measured"
+  },
+  "authorization": {
+    "localCopy": "recorded-from-upstream-notice",
+    "apkRedistribution": "unconfirmed"
+  }
+}

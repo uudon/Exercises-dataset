@@ -1,7 +1,9 @@
 # Media Attribution & License
 
-The exercise **media** (thumbnail images and animation GIFs) in this repository
-is the property of **Gym visual** and is redistributed here **with permission**.
+The exercise **media** (thumbnail images and animation GIFs) copied into this
+Android project is attributed to **Gym visual**. The upstream repository's
+notice records its source-side permission and terms; this project separately
+tracks whether local copying and APK redistribution have been confirmed.
 
 > **© Gym visual — https://gymvisual.com/**
 
@@ -20,17 +22,16 @@ resolution limit.
 
 ## Reuse & licensing
 
-The media is included here with the rights holder's **separate written
-permission** (the mechanism Gym visual's terms require for redistribution). It
-remains the property of Gym visual, and its use and reuse are governed by
+The media remains the property of Gym visual, and its use and reuse are governed by
 **Gym visual's Terms & Conditions of Use**:
 
 > **https://gymvisual.com/content/3-terms-and-conditions-of-use**
 
-If you want to use this media in your own project, review those terms and, where
-required, obtain your own license directly from Gym visual. **This repository
-does not grant you any rights to the media beyond what Gym visual's terms
-allow** — cloning this repo is not a license.
+If you want to use this media in your own project, review those terms and obtain
+the required permission directly from Gym visual. **This project does not grant
+you any rights to the media beyond what Gym visual's terms allow** — the files
+must not be redistributed in an APK until the project authorization record is
+confirmed. See `media-authorization-status.json` for the current status.
 
 ## Dataset (non-media)
 

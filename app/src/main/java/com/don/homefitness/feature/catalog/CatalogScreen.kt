@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -25,23 +26,35 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.GifDecoder
+import coil.request.ImageRequest
 import com.don.homefitness.data.catalog.CatalogExercise
+import com.don.homefitness.data.catalog.MediaResolver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CatalogScreen(viewModel: CatalogViewModel) {
+fun CatalogScreen(viewModel: CatalogViewModel, mediaResolver: MediaResolver) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedExercise by remember { mutableStateOf<CatalogExercise?>(null) }
     if (selectedExercise != null) {
         ExerciseDetailScreen(
             exercise = selectedExercise!!,
+            mediaResolver = mediaResolver,
             onBack = { selectedExercise = null },
         )
         return
@@ -86,6 +99,7 @@ fun CatalogScreen(viewModel: CatalogViewModel) {
                     items(state.exercises, key = { it.id }) { exercise ->
                         ExerciseRow(
                             exercise,
+                            thumbnailPath = mediaResolver.thumbnailPath(exercise.id),
                             onClick = { selectedExercise = exercise },
                             onFavoriteClick = { viewModel.toggleFavorite(exercise) },
                         )
@@ -97,11 +111,25 @@ fun CatalogScreen(viewModel: CatalogViewModel) {
 }
 
 @Composable
-private fun ExerciseRow(exercise: CatalogExercise, onClick: () -> Unit, onFavoriteClick: () -> Unit) {
+private fun ExerciseRow(
+    exercise: CatalogExercise,
+    thumbnailPath: String?,
+    onClick: () -> Unit,
+    onFavoriteClick: () -> Unit,
+) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
+        if (thumbnailPath == null) {
+            Text("无图", modifier = Modifier.size(64.dp).padding(8.dp))
+        } else {
+            LocalAssetImage(
+                path = thumbnailPath,
+                contentDescription = exercise.nameZh,
+                modifier = Modifier.size(64.dp),
+            )
+        }
         Column(Modifier.weight(1f)) {
             Text(exercise.nameZh, style = MaterialTheme.typography.titleMedium)
             Text(
@@ -123,7 +151,11 @@ private fun ExerciseRow(exercise: CatalogExercise, onClick: () -> Unit, onFavori
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExerciseDetailScreen(exercise: CatalogExercise, onBack: () -> Unit) {
+private fun ExerciseDetailScreen(
+    exercise: CatalogExercise,
+    mediaResolver: MediaResolver,
+    onBack: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -136,7 +168,16 @@ private fun ExerciseDetailScreen(exercise: CatalogExercise, onBack: () -> Unit) 
             item {
                 Text("${exercise.bodyPart} · ${exercise.equipment}", style = MaterialTheme.typography.titleMedium)
                 Text("目标肌肉：${exercise.target}", modifier = Modifier.padding(top = 8.dp))
-                Text("媒体未授权，当前仅展示文字说明。", modifier = Modifier.padding(top = 12.dp))
+                val gifPath = mediaResolver.gifPath(exercise.id)
+                if (gifPath == null) {
+                    Text("本地 GIF 资源缺失，请查看资源校验报告。", modifier = Modifier.padding(top = 12.dp))
+                } else {
+                    LocalGifImage(
+                        path = gifPath,
+                        contentDescription = "${exercise.nameZh} 动作示范",
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    )
+                }
                 Text("动作步骤", modifier = Modifier.padding(top = 20.dp), style = MaterialTheme.typography.titleLarge)
             }
             if (exercise.instructionStepsZh.isEmpty()) {
@@ -156,3 +197,53 @@ private fun ExerciseDetailScreen(exercise: CatalogExercise, onBack: () -> Unit) 
         }
     }
 }
+
+@Composable
+private fun LocalAssetImage(path: String, contentDescription: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    AsyncImage(
+        model = ImageRequest.Builder(context).data(assetUri(path)).build(),
+        contentDescription = contentDescription,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun LocalGifImage(path: String, contentDescription: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var isResumed by remember(lifecycleOwner) {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED)
+    }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> isResumed = true
+                Lifecycle.Event.ON_PAUSE -> isResumed = false
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    if (isResumed) {
+        val imageLoader = remember(context) {
+            ImageLoader.Builder(context)
+                .components { add(GifDecoder.Factory()) }
+                .build()
+        }
+        DisposableEffect(imageLoader) {
+            onDispose { imageLoader.shutdown() }
+        }
+        AsyncImage(
+            model = ImageRequest.Builder(context).data(assetUri(path)).build(),
+            imageLoader = imageLoader,
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    } else {
+        Text("动作详情可见时播放本地 GIF", modifier = modifier.padding(8.dp))
+    }
+}
+
+private fun assetUri(path: String): String = "file:///android_asset/$path"

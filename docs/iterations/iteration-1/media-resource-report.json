@@ -1,0 +1,25 @@
+{
+  "sourceCommit": "7455efae41b330c265e7cd4b78dfa848e7ce5ebd",
+  "artifact": "app/build/outputs/apk/debug/app-debug.apk",
+  "apkSizeBytes": 161830068,
+  "apkSha256": "cd070660c8f9560145d865ff9c6c4a4ae2d8a4645341e7e60408ff1395460bcb",
+  "media": {
+    "imageCount": 1324,
+    "gifCount": 1324,
+    "imageBytes": 8875057,
+    "gifBytes": 128741397,
+    "mappingMissingImages": 0,
+    "mappingMissingGifs": 0,
+    "sha256Validation": "executed-no-mismatch"
+  },
+  "runtime": {
+    "thumbnailLoadMs": null,
+    "gifLoadMs": null,
+    "memoryBytes": null,
+    "status": "not-measured"
+  },
+  "authorization": {
+    "localCopy": "recorded-from-upstream-notice",
+    "apkRedistribution": "unconfirmed"
+  }
+}

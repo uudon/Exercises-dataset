@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         val app = application as App
         setContent {
             HomeFitnessTheme {
-                AppNavHost(app.catalogRepository)
+                AppNavHost(app.catalogRepository, app.mediaResolver)
             }
         }
     }

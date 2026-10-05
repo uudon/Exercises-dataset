@@ -1,0 +1,16 @@
+{
+  "sourceRepository": "https://github.com/hasaneyldrm/exercises-dataset",
+  "sourceCommit": "7455efae41b330c265e7cd4b78dfa848e7ce5ebd",
+  "attribution": "© Gym visual — https://gymvisual.com/",
+  "localCopy": {
+    "status": "recorded-from-upstream-notice",
+    "evidence": "app/src/main/assets/catalog/NOTICE.md",
+    "verifiedAt": null
+  },
+  "apkRedistribution": {
+    "status": "unconfirmed",
+    "evidence": null,
+    "verifiedAt": null
+  },
+  "releaseGate": "blocked-until-apk-redistribution-authorization-is-confirmed"
+}
