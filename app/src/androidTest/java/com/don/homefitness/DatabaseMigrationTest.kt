@@ -6,6 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.don.homefitness.data.db.FitnessDatabase
 import com.don.homefitness.data.db.MIGRATION_1_2
+import com.don.homefitness.data.db.MIGRATION_2_3
+import com.don.homefitness.data.db.MIGRATION_3_4
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -57,10 +59,10 @@ class DatabaseMigrationTest {
     }
 
     @Test
-    fun migrationToVersion2PreservesCatalogAndFavorite() {
+    fun migrationToVersion4PreservesCatalogAndFavorite() {
         runBlocking {
         val database = Room.databaseBuilder(context, FitnessDatabase::class.java, databaseName)
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
 
         try {
