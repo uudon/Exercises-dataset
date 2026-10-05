@@ -2,8 +2,30 @@ package com.don.homefitness.data.catalog
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import com.don.homefitness.core.model.TrainingLocation
 
 class HomeEligibilityTest {
+    @Test fun `gym mode allows reviewed equipment actions`() {
+        val exercise = CatalogExercise(
+            id = "0001",
+            originalName = "Barbell Row",
+            nameZh = "杠铃划船",
+            aliasesZh = emptyList(),
+            bodyPart = "back",
+            equipment = "barbell",
+            target = "back",
+            secondaryMuscles = emptyList(),
+            instructionsZh = "",
+            instructionStepsZh = emptyList(),
+            requiredEquipment = setOf("barbell"),
+            homeEligible = false,
+            reviewStatus = "manually-reviewed",
+            sourceCommit = "test",
+            isFavorite = false,
+        )
+        assertEquals(1, filterExercisesAtLocation(listOf(exercise), TrainingLocation.GYM, "", null, null, emptySet()).size)
+        assertEquals(0, filterExercisesAtLocation(listOf(exercise), TrainingLocation.HOME, "", null, null, emptySet()).size)
+    }
     @Test
     fun equipmentAndBodyPartFiltersUseIntersection() {
         val exercises = listOf(

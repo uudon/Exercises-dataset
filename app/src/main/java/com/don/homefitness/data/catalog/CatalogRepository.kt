@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.don.homefitness.data.db.FitnessDatabase
 import com.don.homefitness.data.db.entity.ExerciseEntity
 import com.don.homefitness.data.db.entity.FavoriteEntity
+import com.don.homefitness.core.model.TrainingLocation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -43,10 +44,12 @@ class CatalogRepository(
         bodyPart: String?,
         equipment: String?,
         availableEquipment: Set<String>,
+        location: TrainingLocation = TrainingLocation.HOME,
     ): Flow<List<CatalogExercise>> =
         combine(dao.observeExercises(), dao.observeFavoriteIds()) { entities, favoriteIds ->
-            filterHomeExercises(
+            filterExercisesAtLocation(
                 exercises = entities.map { it.toModel(favoriteIds.contains(it.id)) },
+                location = location,
                 query = query,
                 bodyPart = bodyPart,
                 equipment = equipment,

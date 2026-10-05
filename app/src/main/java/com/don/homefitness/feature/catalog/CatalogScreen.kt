@@ -51,6 +51,7 @@ import coil.decode.GifDecoder
 import coil.request.ImageRequest
 import com.don.homefitness.data.catalog.CatalogExercise
 import com.don.homefitness.data.catalog.MediaResolver
+import com.don.homefitness.core.model.TrainingLocation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +59,7 @@ fun CatalogScreen(
     viewModel: CatalogViewModel,
     mediaResolver: MediaResolver,
     onOpenPlans: () -> Unit = {},
+    onOpenHistory: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedExercise by remember { mutableStateOf<CatalogExercise?>(null) }
@@ -73,7 +75,7 @@ fun CatalogScreen(
         topBar = {
             TopAppBar(
                 title = { Text("动作库") },
-                actions = { TextButton(onClick = onOpenPlans) { Text("我的计划") } },
+                actions = { TextButton(onClick = onOpenHistory) { Text("记录") }; TextButton(onClick = onOpenPlans) { Text("我的计划") } },
             )
         },
     ) { padding ->
@@ -86,6 +88,8 @@ fun CatalogScreen(
                 singleLine = true,
             )
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                item { FilterChip(selected = state.location == TrainingLocation.HOME, onClick = { viewModel.setLocation(TrainingLocation.HOME) }, label = { Text("家庭") }) }
+                item { FilterChip(selected = state.location == TrainingLocation.GYM, onClick = { viewModel.setLocation(TrainingLocation.GYM) }, label = { Text("健身房") }) }
                 item {
                     FilterChip(
                         selected = state.equipment == "body weight",
