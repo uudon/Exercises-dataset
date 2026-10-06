@@ -7,7 +7,11 @@
   ],
   "modelCount": 2,
   "totalBytes": 1535812,
-  "mappingStatus": "explicit-region-and-action-mapping-recorded",
+  "mappingStatus": "explicit-region-to-muscle-group-mapping-recorded",
+  "nodeInspectionStatus": "male-and-female-GLB-JSON-node-lists-verified-against-muscle-regions",
   "licenseStatus": "blocked",
-  "deviceEvidenceStatus": "not-run"
+  "deviceEvidenceStatus": "not-run",
+  "manualApi26EvidenceStatus": "not-run",
+  "pssEvidenceStatus": "not-run",
+  "frameRateEvidenceStatus": "not-run"
 }
