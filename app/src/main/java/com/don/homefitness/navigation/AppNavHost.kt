@@ -6,6 +6,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.don.homefitness.data.catalog.CatalogRepository
 import com.don.homefitness.data.catalog.MediaResolver
 import com.don.homefitness.feature.plan.PlanRepository
@@ -41,17 +43,27 @@ fun AppNavHost(repository: CatalogRepository, mediaResolver: MediaResolver, plan
                 modelRenderer = rendererState.renderer,
                 initialModelError = rendererState.errorMessage,
                 onOpenCatalog = { navController.navigate("catalog") },
+                onOpenExercise = { exerciseId -> navController.navigate("catalog?exerciseId=$exerciseId") },
+                onAddToPlan = { exerciseId -> navController.navigate("plans?exerciseId=$exerciseId") },
             )
         }
-        composable("catalog") {
+        composable(
+            route = "catalog?exerciseId={exerciseId}",
+            arguments = listOf(navArgument("exerciseId") { type = NavType.StringType; nullable = true; defaultValue = null }),
+        ) { entry ->
             CatalogScreen(
                 viewModel = viewModel(factory = CatalogViewModelFactory(repository)),
                 mediaResolver = mediaResolver,
                 onOpenPlans = { navController.navigate("plans") },
                 onOpenHistory = { navController.navigate("history") },
+                initialExerciseId = entry.arguments?.getString("exerciseId"),
+                onAddToPlan = { exerciseId -> navController.navigate("plans?exerciseId=$exerciseId") },
             )
         }
-        composable("plans") {
+        composable(
+            route = "plans?exerciseId={exerciseId}",
+            arguments = listOf(navArgument("exerciseId") { type = NavType.StringType; nullable = true; defaultValue = null }),
+        ) { entry ->
             PlanScreen(
                 planRepository = planRepository,
                 catalogRepository = repository,
@@ -59,6 +71,7 @@ fun AppNavHost(repository: CatalogRepository, mediaResolver: MediaResolver, plan
                     trainingRepository.startSessionAsync(planId) { sessionId -> navController.navigate("training/$sessionId") }
                 },
                 onBack = { navController.popBackStack() },
+                initialExerciseId = entry.arguments?.getString("exerciseId"),
             )
         }
         composable("training/{sessionId}") { entry ->

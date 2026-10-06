@@ -60,14 +60,18 @@ fun CatalogScreen(
     mediaResolver: MediaResolver,
     onOpenPlans: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
+    initialExerciseId: String? = null,
+    onAddToPlan: (String) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedExercise by remember { mutableStateOf<CatalogExercise?>(null) }
+    var selectedExerciseId by remember(initialExerciseId) { mutableStateOf(initialExerciseId) }
+    val selectedExercise = selectedExerciseId?.let { id -> state.exercises.firstOrNull { it.id == id } }
     if (selectedExercise != null) {
         ExerciseDetailScreen(
-            exercise = selectedExercise!!,
+            exercise = selectedExercise,
             mediaResolver = mediaResolver,
-            onBack = { selectedExercise = null },
+            onBack = { selectedExerciseId = null },
+            onAddToPlan = onAddToPlan,
         )
         return
     }
@@ -121,7 +125,7 @@ fun CatalogScreen(
                         ExerciseRow(
                             exercise,
                             thumbnailPath = mediaResolver.thumbnailPath(exercise.id),
-                            onClick = { selectedExercise = exercise },
+                            onClick = { selectedExerciseId = exercise.id },
                             onFavoriteClick = { viewModel.toggleFavorite(exercise) },
                         )
                     }
@@ -176,6 +180,7 @@ private fun ExerciseDetailScreen(
     exercise: CatalogExercise,
     mediaResolver: MediaResolver,
     onBack: () -> Unit,
+    onAddToPlan: (String) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -202,7 +207,13 @@ private fun ExerciseDetailScreen(
                             .clip(MaterialTheme.shapes.large),
                     )
                 }
-                Text("动作步骤", modifier = Modifier.padding(top = 20.dp), style = MaterialTheme.typography.titleLarge)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text("动作步骤", style = MaterialTheme.typography.titleLarge)
+                    TextButton(onClick = { onAddToPlan(exercise.id) }) { Text("加入计划") }
+                }
             }
             if (exercise.instructionStepsZh.isEmpty()) {
                 item { Text(exercise.instructionsZh.ifBlank { "暂无中文说明" }, modifier = Modifier.padding(top = 8.dp)) }

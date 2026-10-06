@@ -45,6 +45,7 @@ fun PlanScreen(
     catalogRepository: CatalogRepository,
     onStart: (String) -> Unit = {},
     onBack: () -> Unit,
+    initialExerciseId: String? = null,
 ) {
     val planViewModel: PlanViewModel = viewModel(factory = PlanViewModelFactory(planRepository))
     val plans by planViewModel.plans.collectAsStateWithLifecycle()
@@ -55,13 +56,14 @@ fun PlanScreen(
         availableEquipment = setOf("body weight", "dumbbell"),
     ).collectAsStateWithLifecycle(emptyList())
     var editingPlan by remember { mutableStateOf<WorkoutPlan?>(null) }
-    var creating by remember { mutableStateOf(false) }
+    var creating by remember(initialExerciseId) { mutableStateOf(initialExerciseId != null) }
     var error by remember { mutableStateOf<String?>(null) }
 
     if (creating || editingPlan != null) {
         PlanEditorScreen(
             initialPlan = editingPlan,
             exercises = exercises,
+            initialExerciseId = initialExerciseId,
             externalError = error,
             onDismissError = { error = null },
             onCancel = { creating = false; editingPlan = null; error = null },
@@ -137,6 +139,7 @@ fun PlanScreen(
 private fun PlanEditorScreen(
     initialPlan: WorkoutPlan?,
     exercises: List<CatalogExercise>,
+    initialExerciseId: String?,
     externalError: String?,
     onDismissError: () -> Unit,
     onCancel: () -> Unit,
@@ -144,7 +147,11 @@ private fun PlanEditorScreen(
 ) {
     var name by remember(initialPlan?.id) { mutableStateOf(initialPlan?.name.orEmpty()) }
     var selectedExercises by remember(initialPlan?.id) {
-        mutableStateOf(initialPlan?.toDraftExercises().orEmpty())
+        mutableStateOf(
+            initialPlan?.toDraftExercises()
+                ?: initialExerciseId?.let { listOf(PlanExerciseDraft(it)) }
+                ?: emptyList(),
+        )
     }
     var showExercisePicker by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }

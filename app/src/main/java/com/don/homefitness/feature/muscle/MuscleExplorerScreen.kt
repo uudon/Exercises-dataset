@@ -49,6 +49,8 @@ fun MuscleExplorerScreen(
     onOpenCatalog: () -> Unit,
     onOpenExercise: (String) -> Unit = {},
     onMuscleSelected: (String) -> Unit = {},
+    panelStateFor: ((muscleGroupId: String, displayNameZh: String) -> MusclePanelState)? = null,
+    onAddToPlan: (String) -> Unit = {},
     modelRenderer: LocalGlbMuscleModelRenderer? = null,
     initialModelError: String? = null,
 ) {
@@ -140,6 +142,18 @@ fun MuscleExplorerScreen(
                 modifier = Modifier.padding(horizontal = 16.dp).semantics { heading() },
                 style = MaterialTheme.typography.titleLarge,
             )
+            state.selectedMuscleGroupId?.let { muscleGroupId ->
+                val displayName = regions.firstOrNull { it.muscleGroupId == muscleGroupId }?.displayNameZh
+                    ?: muscleGroupId
+                MuscleExercisePanel(
+                    state = panelStateFor?.invoke(muscleGroupId, displayName)
+                        ?: MusclePanelState.blocked(muscleGroupId, displayName),
+                    onExerciseClick = onOpenExercise,
+                    onOpenCatalog = onOpenCatalog,
+                    onAddToPlan = onAddToPlan,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
             MuscleTextList(
                 regions = regions,
                 selectedId = state.selectedMuscleGroupId,
