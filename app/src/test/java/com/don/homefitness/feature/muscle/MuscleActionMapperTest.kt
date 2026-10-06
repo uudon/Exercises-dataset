@@ -3,6 +3,9 @@ package com.don.homefitness.feature.muscle
 import com.don.homefitness.core.model.TrainingLocation
 import com.don.homefitness.data.catalog.CatalogExercise
 import com.don.homefitness.data.body.MuscleActionMapping
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -46,10 +49,11 @@ class MuscleActionMapperTest {
     fun rejectsUnsupportedEquipmentEvenWhenSelectedEquipmentIncludesIt() {
         val mapper = MuscleActionMapper(
             exercises = listOf(
+                exercise("0000", "pectorals", equipment = "barbell", requiredEquipment = setOf("body weight")),
                 exercise("0001", "pectorals", equipment = "body weight", requiredEquipment = setOf("body weight", "barbell")),
                 exercise("0002", "pectorals", equipment = "dumbbell", requiredEquipment = setOf("dumbbell", "kettlebell")),
             ),
-            mappings = listOf(MuscleActionMapping("chest", listOf("0001", "0002"), emptyList())),
+            mappings = listOf(MuscleActionMapping("chest", listOf("0000", "0001", "0002"), emptyList())),
         )
 
         val result = mapper.actionsFor(
@@ -59,6 +63,26 @@ class MuscleActionMapperTest {
         )
 
         assertTrue(result.primary.isEmpty())
+    }
+
+    @Test
+    fun observesCatalogExerciseEmissionsAndMapsEachEmission() = runBlocking {
+        val emissions = MutableStateFlow(listOf(exercise("0001", "pectorals", equipment = "body weight")))
+        val mapper = MuscleActionMapper(
+            exercises = emptyList(),
+            mappings = listOf(MuscleActionMapping("chest", listOf("0001"), emptyList())),
+        )
+
+        val observed = mapper.observeActionsFor(
+            source = FakeCatalogExerciseSource(emissions),
+            muscleGroupId = "chest",
+            availableEquipment = setOf("body weight"),
+        )
+        assertEquals(listOf("0001"), observed.first().primary.map(CatalogExercise::id))
+
+        emissions.value = listOf(exercise("0002", "pectorals", equipment = "body weight"))
+
+        assertTrue(observed.first().primary.isEmpty())
     }
 
     @Test
@@ -98,4 +122,16 @@ class MuscleActionMapperTest {
         reviewStatus = "manually-reviewed",
         sourceCommit = "test",
     )
+
+    private class FakeCatalogExerciseSource(
+        private val emissions: MutableStateFlow<List<CatalogExercise>>,
+    ) : CatalogExerciseSource {
+        override fun observeExercises(
+            query: String,
+            bodyPart: String?,
+            equipment: String?,
+            availableEquipment: Set<String>,
+            location: TrainingLocation,
+        ) = emissions
+    }
 }

@@ -20,6 +20,16 @@ data class MuscleActionGroups(
     val secondary: List<CatalogExercise>,
 )
 
+interface CatalogExerciseSource {
+    fun observeExercises(
+        query: String,
+        bodyPart: String?,
+        equipment: String?,
+        availableEquipment: Set<String>,
+        location: TrainingLocation,
+    ): Flow<List<CatalogExercise>>
+}
+
 class MuscleActionMapper(
     private val exercises: List<CatalogExercise>,
     private val mappings: List<MuscleActionMapping>,
@@ -57,7 +67,31 @@ class MuscleActionMapper(
         repository: CatalogRepository,
         muscleGroupId: String,
         availableEquipment: Set<String>,
-    ): Flow<MuscleActionGroups> = repository.observeExercises(
+    ): Flow<MuscleActionGroups> = observeActionsFor(
+        source = object : CatalogExerciseSource {
+            override fun observeExercises(
+                query: String,
+                bodyPart: String?,
+                equipment: String?,
+                availableEquipment: Set<String>,
+                location: TrainingLocation,
+            ): Flow<List<CatalogExercise>> = repository.observeExercises(
+                query = query,
+                bodyPart = bodyPart,
+                equipment = equipment,
+                availableEquipment = availableEquipment,
+                location = location,
+            )
+        },
+        muscleGroupId = muscleGroupId,
+        availableEquipment = availableEquipment,
+    )
+
+    fun observeActionsFor(
+        source: CatalogExerciseSource,
+        muscleGroupId: String,
+        availableEquipment: Set<String>,
+    ): Flow<MuscleActionGroups> = source.observeExercises(
         query = "",
         bodyPart = null,
         equipment = null,
