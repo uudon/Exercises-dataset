@@ -1,0 +1,42 @@
+[
+  {
+    "file": "male.glb",
+    "bytes": 730028,
+    "triangles": 28928,
+    "meshes": 36,
+    "selectableMeshes": 20,
+    "requiredRegions": [
+      "abs",
+      "back",
+      "biceps",
+      "calves",
+      "chest",
+      "forearms",
+      "glutes",
+      "hamstrings",
+      "quadriceps",
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "file": "female.glb",
+    "bytes": 805784,
+    "triangles": 31872,
+    "meshes": 41,
+    "selectableMeshes": 22,
+    "requiredRegions": [
+      "abs",
+      "back",
+      "biceps",
+      "calves",
+      "chest",
+      "forearms",
+      "glutes",
+      "hamstrings",
+      "quadriceps",
+      "shoulders",
+      "triceps"
+    ]
+  }
+]

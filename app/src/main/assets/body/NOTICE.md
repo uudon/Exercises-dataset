@@ -8,6 +8,8 @@ content may be modified, used commercially, and distributed with the app.
 The package is an offline-only prototype. It has no external textures,
 network resources, skeleton, animation, or medical-anatomy claim. See
 `model-manifest.json` for the recorded file sizes, SHA-256 values, provenance,
-and the unresolved formal-source and redistribution authorization status. The
-README/package terms are evidence of the supplied package's stated terms only;
-they are not presented here as formal external authorization.
+and the unresolved formal-source and redistribution authorization status. No
+formal external URL, source version, or independent APK redistribution
+authorization was supplied with the local procedural source. The README/package
+terms are evidence of the supplied package's stated terms only; they are not
+presented here as formal external authorization.

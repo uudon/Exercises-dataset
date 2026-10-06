@@ -1,0 +1,207 @@
+{
+  "torso": {
+    "region_id": "back",
+    "name_zh": "背部",
+    "selectable": true
+  },
+  "abs": {
+    "region_id": "abs",
+    "name_zh": "腹部",
+    "selectable": true
+  },
+  "chest_left": {
+    "region_id": "chest",
+    "name_zh": "胸部",
+    "selectable": true
+  },
+  "chest_right": {
+    "region_id": "chest",
+    "name_zh": "胸部",
+    "selectable": true
+  },
+  "neck": {
+    "region_id": "neck",
+    "name_zh": "颈部",
+    "selectable": false
+  },
+  "head": {
+    "region_id": "head",
+    "name_zh": "头部",
+    "selectable": false
+  },
+  "nose": {
+    "region_id": "nose",
+    "name_zh": "鼻部",
+    "selectable": false
+  },
+  "ear_-1": {
+    "region_id": "ear_-1",
+    "name_zh": "耳部",
+    "selectable": false
+  },
+  "eye_-1": {
+    "region_id": "eye_-1",
+    "name_zh": "眼睛",
+    "selectable": false
+  },
+  "ear_1": {
+    "region_id": "ear_1",
+    "name_zh": "耳部",
+    "selectable": false
+  },
+  "eye_1": {
+    "region_id": "eye_1",
+    "name_zh": "眼睛",
+    "selectable": false
+  },
+  "briefs": {
+    "region_id": "briefs",
+    "name_zh": "运动内裤",
+    "selectable": false
+  },
+  "quadriceps_left": {
+    "region_id": "quadriceps",
+    "name_zh": "股四头肌",
+    "selectable": true
+  },
+  "hamstrings_left": {
+    "region_id": "hamstrings",
+    "name_zh": "腘绳肌",
+    "selectable": true
+  },
+  "knee_left": {
+    "region_id": "knee_left",
+    "name_zh": "膝部",
+    "selectable": false
+  },
+  "calves_left": {
+    "region_id": "calves",
+    "name_zh": "小腿",
+    "selectable": true
+  },
+  "foot_left": {
+    "region_id": "foot_left",
+    "name_zh": "足部",
+    "selectable": false
+  },
+  "shoulders_left": {
+    "region_id": "shoulders",
+    "name_zh": "肩部",
+    "selectable": true
+  },
+  "biceps_left": {
+    "region_id": "biceps",
+    "name_zh": "肱二头肌",
+    "selectable": true
+  },
+  "triceps_left": {
+    "region_id": "triceps",
+    "name_zh": "肱三头肌",
+    "selectable": true
+  },
+  "elbow_left": {
+    "region_id": "elbow_left",
+    "name_zh": "肘部",
+    "selectable": false
+  },
+  "forearms_left": {
+    "region_id": "forearms",
+    "name_zh": "前臂",
+    "selectable": true
+  },
+  "hand_left": {
+    "region_id": "hand_left",
+    "name_zh": "手部",
+    "selectable": false
+  },
+  "glutes_left": {
+    "region_id": "glutes",
+    "name_zh": "臀部",
+    "selectable": true
+  },
+  "quadriceps_right": {
+    "region_id": "quadriceps",
+    "name_zh": "股四头肌",
+    "selectable": true
+  },
+  "hamstrings_right": {
+    "region_id": "hamstrings",
+    "name_zh": "腘绳肌",
+    "selectable": true
+  },
+  "knee_right": {
+    "region_id": "knee_right",
+    "name_zh": "膝部",
+    "selectable": false
+  },
+  "calves_right": {
+    "region_id": "calves",
+    "name_zh": "小腿",
+    "selectable": true
+  },
+  "foot_right": {
+    "region_id": "foot_right",
+    "name_zh": "足部",
+    "selectable": false
+  },
+  "shoulders_right": {
+    "region_id": "shoulders",
+    "name_zh": "肩部",
+    "selectable": true
+  },
+  "biceps_right": {
+    "region_id": "biceps",
+    "name_zh": "肱二头肌",
+    "selectable": true
+  },
+  "triceps_right": {
+    "region_id": "triceps",
+    "name_zh": "肱三头肌",
+    "selectable": true
+  },
+  "elbow_right": {
+    "region_id": "elbow_right",
+    "name_zh": "肘部",
+    "selectable": false
+  },
+  "forearms_right": {
+    "region_id": "forearms",
+    "name_zh": "前臂",
+    "selectable": true
+  },
+  "hand_right": {
+    "region_id": "hand_right",
+    "name_zh": "手部",
+    "selectable": false
+  },
+  "glutes_right": {
+    "region_id": "glutes",
+    "name_zh": "臀部",
+    "selectable": true
+  },
+  "sports_bra_band": {
+    "region_id": "sports_bra_band",
+    "name_zh": "运动内衣围带",
+    "selectable": false
+  },
+  "sports_bra_left": {
+    "region_id": "chest",
+    "name_zh": "胸部",
+    "selectable": true
+  },
+  "bra_strap_left": {
+    "region_id": "bra_strap_left",
+    "name_zh": "运动内衣肩带",
+    "selectable": false
+  },
+  "sports_bra_right": {
+    "region_id": "chest",
+    "name_zh": "胸部",
+    "selectable": true
+  },
+  "bra_strap_right": {
+    "region_id": "bra_strap_right",
+    "name_zh": "运动内衣肩带",
+    "selectable": false
+  }
+}
