@@ -144,6 +144,12 @@ class MuscleActionMapper(
                 )
             }
         }
+
+        fun unavailable(reason: String): MuscleActionMapper = MuscleActionMapper(
+            exercises = emptyList(),
+            mappings = emptyList(),
+            validation = BodyMappingCheckReport(valid = false, errors = listOf(reason)),
+        )
     }
 
 }

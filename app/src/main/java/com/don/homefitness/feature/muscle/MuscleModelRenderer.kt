@@ -46,9 +46,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-private const val MALE_MODEL_PATH = "body/male/body.glb"
-private const val FEMALE_MODEL_PATH = "body/female/body.glb"
-private const val REGION_RESOURCE_PATH = "body/muscle-regions.json"
+internal const val MALE_MODEL_PATH = "body/male/body.glb"
+internal const val FEMALE_MODEL_PATH = "body/female/body.glb"
+internal const val REGION_RESOURCE_PATH = "body/muscle-regions.json"
 private const val HIGHLIGHT_COLOR_PARAMETER = "baseColorFactor"
 private val HIGHLIGHT_COLOR = floatArrayOf(0.95f, 0.25f, 0.12f, 1f)
 

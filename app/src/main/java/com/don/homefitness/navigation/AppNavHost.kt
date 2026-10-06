@@ -1,7 +1,9 @@
 package com.don.homefitness.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +26,9 @@ import com.don.homefitness.feature.muscle.MuscleExplorerViewModel
 import com.don.homefitness.feature.muscle.MuscleExplorerViewModelFactory
 import com.don.homefitness.feature.muscle.UnavailableMuscleModelRenderer
 import com.don.homefitness.feature.muscle.rememberProductionMuscleModelRenderer
+import com.don.homefitness.feature.muscle.loadProductionMuscleActionMapper
+import com.don.homefitness.feature.muscle.panelStateFor
+import com.don.homefitness.core.model.TrainingLocation
 
 @androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
@@ -31,6 +36,17 @@ fun AppNavHost(repository: CatalogRepository, mediaResolver: MediaResolver, plan
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "muscle") {
         composable("muscle") {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val homeExercises by repository.observeExercises(
+                query = "",
+                bodyPart = null,
+                equipment = null,
+                availableEquipment = setOf("body weight", "dumbbell"),
+                location = TrainingLocation.HOME,
+            ).collectAsStateWithLifecycle(emptyList())
+            val actionMapper = remember(context, homeExercises) {
+                loadProductionMuscleActionMapper(context, homeExercises)
+            }
             val rendererState = rememberProductionMuscleModelRenderer()
             val renderer = rendererState.renderer ?: remember(rendererState.errorMessage) {
                 UnavailableMuscleModelRenderer(rendererState.errorMessage ?: "模型资源初始化失败")
@@ -45,6 +61,9 @@ fun AppNavHost(repository: CatalogRepository, mediaResolver: MediaResolver, plan
                 onOpenCatalog = { navController.navigate("catalog") },
                 onOpenExercise = { exerciseId -> navController.navigate("catalog?exerciseId=$exerciseId") },
                 onAddToPlan = { exerciseId -> navController.navigate("plans?exerciseId=$exerciseId") },
+                panelStateFor = { muscleGroupId, displayNameZh ->
+                    actionMapper.panelStateFor(muscleGroupId, displayNameZh)
+                },
             )
         }
         composable(

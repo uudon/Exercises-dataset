@@ -49,7 +49,8 @@ fun MuscleExplorerScreen(
     onOpenCatalog: () -> Unit,
     onOpenExercise: (String) -> Unit = {},
     onMuscleSelected: (String) -> Unit = {},
-    panelStateFor: ((muscleGroupId: String, displayNameZh: String) -> MusclePanelState)? = null,
+    panelStateFor: (muscleGroupId: String, displayNameZh: String) -> MusclePanelState =
+        { muscleGroupId, displayNameZh -> MusclePanelState(muscleGroupId, displayNameZh) },
     onAddToPlan: (String) -> Unit = {},
     modelRenderer: LocalGlbMuscleModelRenderer? = null,
     initialModelError: String? = null,
@@ -146,8 +147,7 @@ fun MuscleExplorerScreen(
                 val displayName = regions.firstOrNull { it.muscleGroupId == muscleGroupId }?.displayNameZh
                     ?: muscleGroupId
                 MuscleExercisePanel(
-                    state = panelStateFor?.invoke(muscleGroupId, displayName)
-                        ?: MusclePanelState.blocked(muscleGroupId, displayName),
+                    state = panelStateFor(muscleGroupId, displayName),
                     onExerciseClick = onOpenExercise,
                     onOpenCatalog = onOpenCatalog,
                     onAddToPlan = onAddToPlan,
