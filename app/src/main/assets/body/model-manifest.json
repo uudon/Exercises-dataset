@@ -1,0 +1,6 @@
+{
+  "entries": [
+    {"gender":"MALE", "assetPath":"body/male/body.glb", "sha256":"", "bytes":0, "licenseStatus":"unconfirmed"},
+    {"gender":"FEMALE", "assetPath":"body/female/body.glb", "sha256":"", "bytes":0, "licenseStatus":"unconfirmed"}
+  ]
+}
