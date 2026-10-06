@@ -57,6 +57,7 @@ class MuscleExplorerViewModelTest {
 
     private class FakeRenderer(private val loadError: String? = null) : MuscleModelRenderer {
         override var onRegionHit: ((String) -> Unit)? = null
+        override var onNodeHit: ((String) -> Unit)? = null
         override var onCameraChanged: ((CameraOrbit) -> Unit)? = null
         override fun load(gender: BodyGender) {
             loadError?.let { throw MuscleModelLoadException(it) }

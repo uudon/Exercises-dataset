@@ -37,6 +37,7 @@ class MuscleExplorerViewModel(private val renderer: MuscleModelRenderer) : ViewM
 
     fun onResume() {
         loadCurrentModelIfReady()
+        renderer.restoreCamera(_uiState.value.cameraOrbit)
         renderer.onResume()
     }
 
