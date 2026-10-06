@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -23,12 +24,12 @@ import com.google.android.filament.MaterialInstance
 import io.github.sceneview.FrameRatePolicy
 import io.github.sceneview.SceneView
 import io.github.sceneview.math.Position
+import io.github.sceneview.model.model
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.ModelNode.RenderableNode
 import io.github.sceneview.rememberCameraManipulator
 import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
-import io.github.sceneview.rememberModelInstance
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberOnGestureListener
 import kotlinx.serialization.json.Json
@@ -67,6 +68,7 @@ interface MuscleModelRenderer {
     fun onResume()
     fun onPause()
     fun dispose()
+    fun setErrorListener(listener: (Throwable) -> Unit) {}
 }
 
 class MuscleModelLoadException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
@@ -79,6 +81,8 @@ class LocalGlbMuscleModelRenderer(
     override var onRegionHit: ((regionId: String) -> Unit)? = null
     override var onNodeHit: ((nodeId: String) -> Unit)? = null
     override var onCameraChanged: ((camera: CameraOrbit) -> Unit)? = null
+
+    override fun setErrorListener(listener: (Throwable) -> Unit) = backend.setErrorListener(listener)
 
     init {
         attachBackendListeners()
@@ -143,6 +147,7 @@ interface SceneViewFilamentBackend {
     fun setNodeHitListener(listener: (String) -> Unit)
     fun setRegionHitListener(listener: (String) -> Unit)
     fun setCameraListener(listener: (CameraOrbit) -> Unit)
+    fun setErrorListener(listener: (Throwable) -> Unit) {}
     @Composable
     fun Content(modifier: Modifier = Modifier)
 }
@@ -246,17 +251,29 @@ fun isValidLocalGlbAssetPath(path: String): Boolean {
     return path.split('/').none { it.isBlank() || it == "." || it == ".." }
 }
 
+data class ProductionMuscleModelRendererState(
+    val renderer: LocalGlbMuscleModelRenderer?,
+    val errorMessage: String?,
+)
+
 @Composable
-fun rememberProductionMuscleModelRenderer(): LocalGlbMuscleModelRenderer {
+fun rememberProductionMuscleModelRenderer(): ProductionMuscleModelRendererState {
     val context = LocalContext.current
-    val regionMap = remember(context) { loadMuscleRegionMap(context) }
-    return remember(regionMap) {
-        LocalGlbMuscleModelRenderer(
-            assetPathByGender = mapOf(
-                BodyGender.MALE to MALE_MODEL_PATH,
-                BodyGender.FEMALE to FEMALE_MODEL_PATH,
-            ),
-            regionMap = regionMap,
+    return remember(context) {
+        runCatching {
+            val regionMap = loadMuscleRegionMap(context)
+            LocalGlbMuscleModelRenderer(
+                assetPathByGender = mapOf(
+                    BodyGender.MALE to MALE_MODEL_PATH,
+                    BodyGender.FEMALE to FEMALE_MODEL_PATH,
+                ),
+                regionMap = regionMap,
+            )
+        }.fold(
+            onSuccess = { ProductionMuscleModelRendererState(it, null) },
+            onFailure = { error ->
+                ProductionMuscleModelRendererState(null, error.message ?: "模型资源初始化失败")
+            },
         )
     }
 }
@@ -272,14 +289,41 @@ fun MuscleModelViewport(
     onError: (String) -> Unit = {},
     errorContent: @Composable (String) -> Unit = { message -> Text(message) },
 ) {
-    var loadError by remember(renderer, gender) { mutableStateOf<String?>(null) }
+    MuscleModelViewportContent(
+        renderer = renderer,
+        initialError = null,
+        gender = gender,
+        selectedMuscleGroupId = selectedMuscleGroupId,
+        modifier = modifier,
+        onRegionSelected = onRegionSelected,
+        onCameraChanged = onCameraChanged,
+        onError = onError,
+        errorContent = errorContent,
+    )
+}
+
+@Composable
+private fun MuscleModelViewportContent(
+    renderer: LocalGlbMuscleModelRenderer?,
+    initialError: String?,
+    gender: BodyGender,
+    selectedMuscleGroupId: String?,
+    modifier: Modifier,
+    onRegionSelected: (String) -> Unit,
+    onCameraChanged: (CameraOrbit) -> Unit,
+    onError: (String) -> Unit,
+    errorContent: @Composable (String) -> Unit,
+) {
+    var loadError by remember(renderer, gender, initialError) { mutableStateOf(initialError) }
     val savedCamera = remember(renderer) { mutableStateOf(CameraOrbit.DEFAULT) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnError by rememberUpdatedState(onError)
     val currentOnCameraChanged = rememberUpdatedState(onCameraChanged)
     val currentGenderState = rememberUpdatedState(gender)
-    val lifecycleController = remember(renderer) {
-        MuscleModelLifecycleController(renderer, { currentGenderState.value }) { savedCamera.value }
+    val lifecycleController = renderer?.let {
+        remember(it) {
+            MuscleModelLifecycleController(it, { currentGenderState.value }) { savedCamera.value }
+        }
     }
     fun reportError(error: Throwable) {
         val message = error.message ?: "模型加载失败"
@@ -287,35 +331,47 @@ fun MuscleModelViewport(
         currentOnError(message)
     }
     fun bindListeners() {
+        if (renderer == null) return
         renderer.onRegionHit = onRegionSelected
         renderer.onCameraChanged = { camera ->
             savedCamera.value = camera
             currentOnCameraChanged.value(camera)
         }
+        renderer.setErrorListener(::reportError)
     }
     androidx.compose.runtime.DisposableEffect(renderer, onRegionSelected, onCameraChanged, lifecycleOwner) {
-        bindListeners()
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START || event == Lifecycle.Event.ON_RESUME) loadError = null
-            if (event == Lifecycle.Event.ON_START) bindListeners()
-            lifecycleController.onEvent(event, ::reportError)
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            renderer.onRegionHit = null
-            renderer.onCameraChanged = null
-            renderer.dispose()
+        if (renderer == null) {
+            if (initialError != null) currentOnError(initialError)
+            onDispose { }
+        } else {
+            bindListeners()
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_START || event == Lifecycle.Event.ON_RESUME) loadError = null
+                if (event == Lifecycle.Event.ON_START) bindListeners()
+                lifecycleController?.onEvent(event, ::reportError)
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                renderer.onRegionHit = null
+                renderer.onCameraChanged = null
+                renderer.dispose()
+            }
         }
     }
     LaunchedEffect(renderer, gender, lifecycleOwner) {
+        if (renderer == null) return@LaunchedEffect
         loadError = null
-        lifecycleController.restart()
+        lifecycleController?.restart()
         bindListeners()
-        lifecycleController.sync(lifecycleOwner.lifecycle.currentState, ::reportError)
+        lifecycleController?.sync(lifecycleOwner.lifecycle.currentState, ::reportError)
     }
-    renderer.setHighlight(selectedMuscleGroupId)
-    if (loadError == null) renderer.Content(modifier) else errorContent(loadError!!)
+    if (renderer != null && loadError == null) {
+        renderer.setHighlight(selectedMuscleGroupId)
+        renderer.Content(modifier)
+    } else {
+        errorContent(loadError ?: "模型加载失败")
+    }
 }
 
 @Composable
@@ -328,8 +384,18 @@ fun MuscleModelViewport(
     onError: (String) -> Unit = {},
     errorContent: @Composable (String) -> Unit = { message -> Text(message) },
 ) {
-    val renderer = rememberProductionMuscleModelRenderer()
-    MuscleModelViewport(renderer, gender, selectedMuscleGroupId, modifier, onRegionSelected, onCameraChanged, onError, errorContent)
+    val rendererState = rememberProductionMuscleModelRenderer()
+    MuscleModelViewportContent(
+        renderer = rendererState.renderer,
+        initialError = rendererState.errorMessage,
+        gender = gender,
+        selectedMuscleGroupId = selectedMuscleGroupId,
+        modifier = modifier,
+        onRegionSelected = onRegionSelected,
+        onCameraChanged = onCameraChanged,
+        onError = onError,
+        errorContent = errorContent,
+    )
 }
 
 internal class MuscleModelLifecycleController(
@@ -446,6 +512,7 @@ class ComposeSceneViewFilamentBackend : SceneViewFilamentBackend {
     private var nodeHitListener: (String) -> Unit = {}
     private var regionHitListener: (String) -> Unit = {}
     private var cameraListener: (CameraOrbit) -> Unit = {}
+    private var errorListener: (Throwable) -> Unit = {}
     private var materialHighlightController: MaterialHighlightController? = null
 
     override fun loadLocalGlb(
@@ -476,10 +543,12 @@ class ComposeSceneViewFilamentBackend : SceneViewFilamentBackend {
         nodeHitListener = {}
         regionHitListener = {}
         cameraListener = {}
+        errorListener = {}
     }
     override fun setNodeHitListener(listener: (String) -> Unit) { nodeHitListener = listener }
     override fun setRegionHitListener(listener: (String) -> Unit) { regionHitListener = listener }
     override fun setCameraListener(listener: (CameraOrbit) -> Unit) { cameraListener = listener }
+    override fun setErrorListener(listener: (Throwable) -> Unit) { errorListener = listener }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -487,7 +556,9 @@ class ComposeSceneViewFilamentBackend : SceneViewFilamentBackend {
         val engine = rememberEngine()
         val cameraNode = rememberCameraNode(engine)
         val modelLoader = rememberModelLoader(engine)
-        val modelInstance = modelPath?.let { rememberModelInstance(modelLoader, it) }
+        val modelInstance = modelPath?.let { path ->
+            rememberSafeModelInstance(modelLoader, path, errorListener)
+        }
         val cameraPosition = savedCamera.toPosition()
         val gestureBridge = remember { GestureIntentBridge(tapSlopPx = 8f) }
         val highlightController = remember(engine) { MaterialHighlightController(engine) }
@@ -535,6 +606,29 @@ class ComposeSceneViewFilamentBackend : SceneViewFilamentBackend {
             }
         }
     }
+}
+
+@Composable
+private fun rememberSafeModelInstance(
+    modelLoader: io.github.sceneview.loaders.ModelLoader,
+    modelPath: String,
+    onError: (Throwable) -> Unit,
+): com.google.android.filament.gltfio.FilamentInstance? {
+    val instance by produceState<com.google.android.filament.gltfio.FilamentInstance?>(
+        initialValue = null,
+        key1 = modelLoader,
+        key2 = modelPath,
+    ) {
+        try {
+            value = modelLoader.loadModelInstance(modelPath) { resourcePath -> resourcePath }
+        } catch (error: Throwable) {
+            onError(error)
+        }
+    }
+    DisposableEffect(instance) {
+        onDispose { instance?.model?.let(modelLoader::destroyModel) }
+    }
+    return instance
 }
 
 private class MaterialHighlightController(private val engine: Engine) {

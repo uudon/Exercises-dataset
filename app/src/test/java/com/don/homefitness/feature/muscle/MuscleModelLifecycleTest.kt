@@ -4,6 +4,7 @@ import com.don.homefitness.data.body.BodyGender
 import androidx.lifecycle.Lifecycle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import java.io.ByteArrayInputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -97,6 +98,22 @@ class MuscleModelLifecycleTest {
     }
 
     @Test
+    fun rendererForwardsSceneViewModelLoadFailuresToErrorListener() {
+        val backend = RecordingBackend()
+        val renderer = LocalGlbMuscleModelRenderer(
+            assetPathByGender = mapOf(BodyGender.MALE to "body/male/body.glb"),
+            regionMap = testRegionMap(),
+            backend = backend,
+        )
+        val errors = mutableListOf<Throwable>()
+        renderer.setErrorListener(errors::add)
+
+        backend.emitError(IllegalStateException("missing GLB"))
+
+        assertEquals("missing GLB", errors.single().message)
+    }
+
+    @Test
     fun resourceMapValidatesBothGenderNodeSets() {
         val map = testRegionMap()
 
@@ -113,6 +130,25 @@ class MuscleModelLifecycleTest {
         val error = runCatching { ValidatedMuscleRegionMap.fromJson(resource, actualModelNodes()) }.exceptionOrNull()
 
         assertTrue(error is IllegalArgumentException)
+    }
+
+    @Test
+    fun malformedRegionJsonIsRejectedBeforeRendererCreation() {
+        val error = runCatching {
+            ValidatedMuscleRegionMap.fromJson("[{not-json}]", actualModelNodes())
+        }.exceptionOrNull()
+
+        assertTrue(error != null)
+    }
+
+    @Test
+    fun missingGlbIsRejectedBeforeNodeMapCreation() {
+        val error = runCatching {
+            readGlbNodeNames(ByteArrayInputStream(byteArrayOf()))
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalArgumentException)
+        assertEquals("GLB header is truncated", error?.message)
     }
 
     @Test
@@ -218,6 +254,7 @@ class MuscleModelLifecycleTest {
     private class RecordingBackend : SceneViewFilamentBackend {
         private var nodeListener: (String) -> Unit = {}
         private var regionListener: (String) -> Unit = {}
+        private var errorListener: (Throwable) -> Unit = {}
         override fun loadLocalGlb(assetPath: String, gender: BodyGender, nodeToRegion: Map<String, String>, nodeToMuscleGroup: Map<String, String>) = Unit
         override fun setHighlight(muscleGroupId: String?) = Unit
         override fun resetCamera() = Unit
@@ -228,12 +265,14 @@ class MuscleModelLifecycleTest {
         override fun setNodeHitListener(listener: (String) -> Unit) { nodeListener = listener }
         override fun setRegionHitListener(listener: (String) -> Unit) { regionListener = listener }
         override fun setCameraListener(listener: (CameraOrbit) -> Unit) = Unit
+        override fun setErrorListener(listener: (Throwable) -> Unit) { errorListener = listener }
         @Composable
         override fun Content(modifier: Modifier) = Unit
         fun emitHit(nodeId: String, regionId: String) {
             nodeListener(nodeId)
             regionListener(regionId)
         }
+        fun emitError(error: Throwable) = errorListener(error)
     }
 
     private fun testRegionMap(): ValidatedMuscleRegionMap = ValidatedMuscleRegionMap.fromJson(
