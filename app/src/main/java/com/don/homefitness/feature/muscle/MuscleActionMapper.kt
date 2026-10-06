@@ -5,6 +5,7 @@ import com.don.homefitness.data.body.BodyGender
 import com.don.homefitness.data.body.BodyMappingCheckReport
 import com.don.homefitness.data.body.BodyMappingValidator
 import com.don.homefitness.data.body.BodyModelCheckReport
+import com.don.homefitness.data.body.BodyModelAuthorization
 import com.don.homefitness.data.body.BodyModelValidator
 import com.don.homefitness.data.body.MuscleActionMapping
 import com.don.homefitness.data.body.MuscleRegion
@@ -141,18 +142,32 @@ class MuscleActionMapper(
                             selectableMeshes = model.selectableMeshes,
                             requiredRegions = model.requiredRegions,
                             nodeNames = model.nodeNames,
+                            licenseStatus = model.licenseStatus,
+                            sourceUrlOrRepository = model.sourceUrlOrRepository,
+                            sourceCommitOrVersion = model.sourceCommitOrVersion,
+                            license = model.license,
+                            attribution = model.attribution,
+                            apkRedistributionAuthorization = model.apkRedistributionAuthorization,
                         )
                     },
                     licenseStatus = report.licenseStatus,
+                    authorization = report.authorization,
                 )
                 val reportErrors = actualModelReport?.let {
                     BodyModelValidator().validateReportIntegrity(it, parsedModelReport)
                 }.orEmpty()
-                val modelReport = if (reportErrors.isEmpty()) parsedModelReport else parsedModelReport.copy(
-                    runtimeValid = false,
-                    structureValid = false,
-                    errors = parsedModelReport.errors + reportErrors,
-                )
+                val modelReport = if (reportErrors.isEmpty()) parsedModelReport else {
+                    val technicalMismatch = reportErrors.any(::isTechnicalIntegrityError)
+                    val expectedReport = actualModelReport
+                    parsedModelReport.copy(
+                        valid = false,
+                        runtimeValid = if (technicalMismatch) false else expectedReport?.runtimeValid ?: parsedModelReport.runtimeValid,
+                        structureValid = if (technicalMismatch) false else expectedReport?.structureValid ?: parsedModelReport.structureValid,
+                        licenseStatus = expectedReport?.licenseStatus ?: parsedModelReport.licenseStatus,
+                        authorization = expectedReport?.authorization ?: parsedModelReport.authorization,
+                        errors = parsedModelReport.errors + reportErrors,
+                    )
+                }
                 val validation = BodyMappingValidator().validate(
                     regions = regions,
                     mappings = mappings,
@@ -182,6 +197,10 @@ class MuscleActionMapper(
 
 }
 
+private fun isTechnicalIntegrityError(error: String): Boolean =
+    error.contains("runtimeValid") || error.contains("structureValid") || error.contains("modelCount") ||
+        error.contains("totalBytes") || error.contains("metrics do not match")
+
 @Serializable
 private data class ModelCheckReportResource(
     val valid: Boolean,
@@ -192,6 +211,7 @@ private data class ModelCheckReportResource(
     val totalBytes: Long,
     val models: List<ModelMetricsResource>,
     val licenseStatus: String,
+    val authorization: BodyModelAuthorization = BodyModelAuthorization(),
 )
 
 @Serializable
@@ -205,4 +225,10 @@ private data class ModelMetricsResource(
     val selectableMeshes: Int,
     val requiredRegions: List<String>,
     val nodeNames: List<String>,
+    val licenseStatus: String = "unknown",
+    val sourceUrlOrRepository: String = "unknown",
+    val sourceCommitOrVersion: String = "unknown",
+    val license: String = "unknown",
+    val attribution: String = "unknown",
+    val apkRedistributionAuthorization: String = "unknown",
 )

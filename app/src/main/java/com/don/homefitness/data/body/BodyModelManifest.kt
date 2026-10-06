@@ -39,6 +39,7 @@ data class BodyModelCheckReport(
     val authorization: BodyModelAuthorization = BodyModelAuthorization(),
 )
 
+@Serializable
 data class BodyModelAuthorization(
     val licenseStatus: String = "unknown",
     val apkRedistribution: String = "unknown",
@@ -56,4 +57,10 @@ data class BodyModelMetrics(
     val selectableMeshes: Int,
     val requiredRegions: List<String>,
     val nodeNames: List<String> = emptyList(),
+    val licenseStatus: String = "unknown",
+    val sourceUrlOrRepository: String = "unknown",
+    val sourceCommitOrVersion: String = "unknown",
+    val license: String = "unknown",
+    val attribution: String = "unknown",
+    val apkRedistributionAuthorization: String = "unknown",
 )

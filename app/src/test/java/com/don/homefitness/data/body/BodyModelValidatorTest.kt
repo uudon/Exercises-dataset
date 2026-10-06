@@ -152,6 +152,40 @@ class BodyModelValidatorTest {
         assertTrue(result.errors.isEmpty())
     }
 
+    @Test
+    fun staleValidAndConfirmedAuthorizationSidecarFailsClosedAgainstBlockedManifest() {
+        val expected = BodyModelCheckReport(
+            valid = false,
+            errors = listOf("licenseStatus is not confirmed"),
+            modelCount = 0,
+            totalBytes = 0,
+            runtimeValid = true,
+            structureValid = true,
+            licenseStatus = "blocked",
+            authorization = BodyModelAuthorization(
+                licenseStatus = "blocked",
+                apkRedistribution = "blocked",
+                releaseGate = "blocked",
+            ),
+        )
+        val reported = expected.copy(
+            valid = true,
+            licenseStatus = "confirmed",
+            authorization = BodyModelAuthorization(
+                licenseStatus = "confirmed",
+                apkRedistribution = "confirmed",
+                releaseGate = "authorized",
+            ),
+        )
+
+        val errors = BodyModelValidator().validateReportIntegrity(expected, reported)
+
+        assertTrue(errors.any { it.contains("valid") })
+        assertTrue(errors.any { it.contains("licenseStatus") })
+        assertTrue(errors.any { it.contains("authorization") })
+        assertTrue(errors.none { it.contains("runtimeValid") || it.contains("structureValid") })
+    }
+
     private fun manifest(entry: TestEntry): String = "{\"entries\":[${entry.json}]}"
 
     private fun entry(

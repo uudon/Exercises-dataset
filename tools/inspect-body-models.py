@@ -101,7 +101,7 @@ def inspect_glb(data: bytes, entry: dict) -> dict:
     if not isinstance(regions, list) or not regions: raise ValueError(f"{entry['gender']} required regions are missing")
     present = [region for region in regions if any(region.lower() == region_id.lower() for region_id in region_ids)]
     selectable = selectable_count
-    metrics = {"gender": entry["gender"], "assetPath": entry["assetPath"], "bytes": len(data), "meshes": len(meshes), "materials": len(materials), "triangles": triangles, "selectableMeshes": selectable, "requiredRegions": present, "nodeNames": names}
+    metrics = {"gender": entry["gender"], "assetPath": entry["assetPath"], "bytes": len(data), "meshes": len(meshes), "materials": len(materials), "triangles": triangles, "selectableMeshes": selectable, "requiredRegions": present, "nodeNames": names, "licenseStatus": entry.get("licenseStatus", "unknown"), "sourceUrlOrRepository": entry.get("sourceUrlOrRepository", "unknown"), "sourceCommitOrVersion": entry.get("sourceCommitOrVersion", "unknown"), "license": entry.get("license", "unknown"), "attribution": entry.get("attribution", "unknown"), "apkRedistributionAuthorization": entry.get("apkRedistributionAuthorization", "unknown")}
     for key in ("meshes", "materials", "triangles", "selectableMeshes"):
         if entry[key] != metrics[key]: raise ValueError(f"{entry['gender']} {key} mismatch: expected {entry[key]}, got {metrics[key]}")
     missing = sorted(set(regions) - set(present))

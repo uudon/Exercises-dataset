@@ -181,6 +181,50 @@ class MuscleActionMapperTest {
         assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).primary.isEmpty())
     }
 
+    @Test
+    fun staleAuthorizationSidecarIsBlockedWithoutDisablingTechnicalRuntime() {
+        val mapper = MuscleActionMapper.fromResources(
+            regionsJson = "[]",
+            mappingsJson = "[]",
+            modelCheckReportJson = """
+                {
+                  "valid": true,
+                  "runtimeValid": true,
+                  "structureValid": true,
+                  "errors": [],
+                  "modelCount": 0,
+                  "totalBytes": 0,
+                  "models": [],
+                  "licenseStatus": "confirmed",
+                  "authorization": {
+                    "licenseStatus": "confirmed",
+                    "apkRedistribution": "confirmed",
+                    "releaseGate": "authorized"
+                  }
+                }
+            """.trimIndent(),
+            catalogExercises = emptyList(),
+            modelNodeIdsByGender = emptyMap(),
+            actualModelReport = BodyModelCheckReport(
+                valid = false,
+                errors = listOf("licenseStatus is not confirmed"),
+                modelCount = 0,
+                totalBytes = 0,
+                runtimeValid = true,
+                structureValid = true,
+                licenseStatus = "blocked",
+                authorization = com.don.homefitness.data.body.BodyModelAuthorization(
+                    licenseStatus = "blocked",
+                    apkRedistribution = "blocked",
+                    releaseGate = "blocked",
+                ),
+            ),
+        )
+
+        assertTrue(mapper.releaseAuthorizationBlocked)
+        assertTrue(mapper.initializationError?.contains("runtimeValid") != true)
+    }
+
     private fun exercise(
         id: String,
         target: String,

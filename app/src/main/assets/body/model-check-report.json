@@ -73,7 +73,13 @@
         "forearms_right",
         "hand_right",
         "glutes_right"
-      ]
+      ],
+      "licenseStatus": "unconfirmed",
+      "sourceUrlOrRepository": "blocked",
+      "sourceCommitOrVersion": "blocked",
+      "license": "README/package terms only: original procedural geometry; no third-party resources; README states modification, commercial use, and App distribution are permitted",
+      "attribution": "README/package terms only: content is described as original procedural geometry with no third-party resources; no formal attribution record supplied",
+      "apkRedistributionAuthorization": "blocked"
     },
     {
       "gender": "FEMALE",
@@ -138,7 +144,13 @@
         "bra_strap_left",
         "sports_bra_right",
         "bra_strap_right"
-      ]
+      ],
+      "licenseStatus": "unconfirmed",
+      "sourceUrlOrRepository": "blocked",
+      "sourceCommitOrVersion": "blocked",
+      "license": "README/package terms only: original procedural geometry; no third-party resources; README states modification, commercial use, and App distribution are permitted",
+      "attribution": "README/package terms only: content is described as original procedural geometry with no third-party resources; no formal attribution record supplied",
+      "apkRedistributionAuthorization": "blocked"
     }
   ],
   "generatedStatsSource": "direct GLB byte/node/metric inspection (tools/inspect-body-models.py)",

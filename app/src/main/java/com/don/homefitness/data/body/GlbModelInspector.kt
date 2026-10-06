@@ -72,7 +72,23 @@ internal object GlbModelInspector {
         require(entry.requiredRegions.isNotEmpty()) { "${entry.gender} required regions are missing" }
         val requiredRegions = entry.requiredRegions.filter { region -> nodeRegionIds.any { it.equals(region, ignoreCase = true) } }
         val selectableMeshes = selectableNodeCount
-        val metrics = BodyModelMetrics(entry.gender, entry.assetPath, bytes.size.toLong(), meshes.size, materials.size, triangleCount, selectableMeshes, requiredRegions, nodeNames)
+        val metrics = BodyModelMetrics(
+            gender = entry.gender,
+            assetPath = entry.assetPath,
+            bytes = bytes.size.toLong(),
+            meshes = meshes.size,
+            materials = materials.size,
+            triangles = triangleCount,
+            selectableMeshes = selectableMeshes,
+            requiredRegions = requiredRegions,
+            nodeNames = nodeNames,
+            licenseStatus = entry.licenseStatus,
+            sourceUrlOrRepository = entry.sourceUrlOrRepository,
+            sourceCommitOrVersion = entry.sourceCommitOrVersion,
+            license = entry.license,
+            attribution = entry.attribution,
+            apkRedistributionAuthorization = entry.apkRedistributionAuthorization,
+        )
         val errors = buildList {
             if (entry.meshes != metrics.meshes) add("${entry.gender} mesh count mismatch: expected ${entry.meshes}, got ${metrics.meshes}")
             if (entry.materials != metrics.materials) add("${entry.gender} material count mismatch: expected ${entry.materials}, got ${metrics.materials}")

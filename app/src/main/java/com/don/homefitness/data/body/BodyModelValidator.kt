@@ -98,6 +98,9 @@ class BodyModelValidator {
         expected: BodyModelCheckReport,
         reported: BodyModelCheckReport,
     ): List<String> = buildList {
+        if (reported.valid != expected.valid) {
+            add("model-check-report valid does not match packaged manifest")
+        }
         if (reported.runtimeValid != expected.runtimeValid) {
             add("model-check-report runtimeValid does not match packaged assets")
         }
@@ -110,6 +113,12 @@ class BodyModelValidator {
         if (reported.totalBytes != expected.totalBytes) {
             add("model-check-report totalBytes does not match packaged assets")
         }
+        if (reported.licenseStatus != expected.licenseStatus) {
+            add("model-check-report licenseStatus does not match packaged manifest")
+        }
+        if (reported.authorization != expected.authorization) {
+            add("model-check-report authorization does not match packaged manifest")
+        }
         expected.models.sortedBy { it.gender }.zip(reported.models.sortedBy { it.gender }).forEach { (actual, sidecar) ->
             if (actual.gender != sidecar.gender || actual.assetPath != sidecar.assetPath ||
                 actual.bytes != sidecar.bytes || actual.meshes != sidecar.meshes ||
@@ -118,6 +127,15 @@ class BodyModelValidator {
                 actual.requiredRegions != sidecar.requiredRegions || actual.nodeNames != sidecar.nodeNames
             ) {
                 add("model-check-report metrics do not match packaged ${actual.gender} GLB")
+            }
+            if (actual.licenseStatus != sidecar.licenseStatus ||
+                actual.sourceUrlOrRepository != sidecar.sourceUrlOrRepository ||
+                actual.sourceCommitOrVersion != sidecar.sourceCommitOrVersion ||
+                actual.license != sidecar.license ||
+                actual.attribution != sidecar.attribution ||
+                actual.apkRedistributionAuthorization != sidecar.apkRedistributionAuthorization
+            ) {
+                add("model-check-report authorization metadata does not match packaged ${actual.gender} manifest")
             }
         }
         if (reported.models.size != expected.models.size) {
