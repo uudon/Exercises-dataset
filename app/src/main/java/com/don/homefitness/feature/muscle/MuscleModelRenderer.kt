@@ -32,6 +32,7 @@ import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberOnGestureListener
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -56,6 +57,11 @@ internal fun shouldHighlightNode(
     nodeToMuscleGroup: Map<String, String>,
     selectedMuscleGroupId: String?,
 ): Boolean = selectedMuscleGroupId != null && nodeToMuscleGroup[nodeId] == selectedMuscleGroupId
+
+internal fun reportModelLoadError(error: Exception, onError: (Throwable) -> Unit) {
+    if (error is CancellationException) throw error
+    onError(error)
+}
 
 interface MuscleModelRenderer {
     var onRegionHit: ((regionId: String) -> Unit)?
@@ -621,8 +627,8 @@ private fun rememberSafeModelInstance(
     ) {
         try {
             value = modelLoader.loadModelInstance(modelPath) { resourcePath -> resourcePath }
-        } catch (error: Throwable) {
-            onError(error)
+        } catch (error: Exception) {
+            reportModelLoadError(error, onError)
         }
     }
     DisposableEffect(instance) {

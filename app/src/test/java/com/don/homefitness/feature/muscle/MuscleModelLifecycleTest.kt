@@ -5,6 +5,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import java.io.ByteArrayInputStream
+import kotlinx.coroutines.CancellationException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -111,6 +112,20 @@ class MuscleModelLifecycleTest {
         backend.emitError(IllegalStateException("missing GLB"))
 
         assertEquals("missing GLB", errors.single().message)
+    }
+
+    @Test
+    fun modelLoadErrorRoutingRethrowsCancellationButReportsOtherExceptions() {
+        val errors = mutableListOf<Throwable>()
+
+        reportModelLoadError(IllegalStateException("missing GLB"), errors::add)
+
+        assertEquals("missing GLB", errors.single().message)
+        val cancellation = CancellationException("disposed")
+        val thrown = runCatching { reportModelLoadError(cancellation, errors::add) }.exceptionOrNull()
+
+        assertTrue(thrown === cancellation)
+        assertEquals(1, errors.size)
     }
 
     @Test
