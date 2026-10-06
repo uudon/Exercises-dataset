@@ -84,9 +84,13 @@ class MuscleExplorerScreenTest {
 
         composeRule.onNodeWithTag("fake viewport").assertIsDisplayed()
         composeRule.onNodeWithText("胸部").performClick()
+        val restoreCountBeforeReset = backend.restoreCount
         composeRule.onNodeWithText("恢复视角").performClick()
+        composeRule.waitForIdle()
 
         assertEquals(1, backend.resetCount)
+        assertTrue(backend.restoreCount > restoreCountBeforeReset)
+        assertEquals(CameraOrbit.DEFAULT, backend.lastRestoredCamera)
     }
 
     private fun setScreen(
@@ -123,6 +127,8 @@ class MuscleExplorerScreenTest {
 
     private class FakeBackend : SceneViewFilamentBackend {
         var resetCount = 0
+        var restoreCount = 0
+        var lastRestoredCamera: CameraOrbit? = null
 
         override fun loadLocalGlb(
             assetPath: String,
@@ -133,7 +139,10 @@ class MuscleExplorerScreenTest {
 
         override fun setHighlight(muscleGroupId: String?) = Unit
         override fun resetCamera() { resetCount++ }
-        override fun restoreCamera(camera: CameraOrbit) = Unit
+        override fun restoreCamera(camera: CameraOrbit) {
+            restoreCount++
+            lastRestoredCamera = camera
+        }
         override fun onResume() = Unit
         override fun onPause() = Unit
         override fun dispose() = Unit
