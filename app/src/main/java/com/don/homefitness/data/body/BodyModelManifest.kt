@@ -17,11 +17,11 @@ data class BodyModelEntry(
     val license: String,
     val attribution: String,
     val apkRedistributionAuthorization: String,
-    val meshes: Int = 0,
-    val materials: Int = 0,
-    val triangles: Int = 0,
-    val selectableMeshes: Int = 0,
-    val requiredRegions: List<String> = emptyList(),
+    val meshes: Int,
+    val materials: Int,
+    val triangles: Int,
+    val selectableMeshes: Int,
+    val requiredRegions: List<String>,
 )
 
 @Serializable
@@ -36,6 +36,13 @@ data class BodyModelCheckReport(
     val structureValid: Boolean = true,
     val models: List<BodyModelMetrics> = emptyList(),
     val licenseStatus: String = "unknown",
+    val authorization: BodyModelAuthorization = BodyModelAuthorization(),
+)
+
+data class BodyModelAuthorization(
+    val licenseStatus: String = "unknown",
+    val apkRedistribution: String = "unknown",
+    val releaseGate: String = "unknown",
 )
 
 @Serializable

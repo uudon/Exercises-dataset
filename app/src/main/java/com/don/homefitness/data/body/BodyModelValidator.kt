@@ -22,34 +22,54 @@ class BodyModelValidator {
         }
         val errors = mutableListOf<String>()
         val modelReports = mutableListOf<BodyModelMetrics>()
-        var structureValid = true
+        var runtimeValid = true
         val genders = manifest.entries.groupingBy(BodyModelEntry::gender).eachCount()
-        genders.filterValues { it > 1 }.keys.forEach { errors += "$it model is not unique" }
-        BodyGender.entries.filterNot(genders::containsKey).forEach { errors += "$it model is missing" }
+        genders.filterValues { it > 1 }.keys.forEach {
+            errors += "$it model is not unique"
+            runtimeValid = false
+        }
+        BodyGender.entries.filterNot(genders::containsKey).forEach {
+            errors += "$it model is missing"
+            runtimeValid = false
+        }
         var totalBytes = 0L
         manifest.entries.forEachIndexed { index, entry ->
             val label = "entry[$index] ${entry.gender}"
             if (!isRelativeAssetPath(entry.assetPath)) {
                 errors += "$label must use a relative android_asset path: ${entry.assetPath}"
+                runtimeValid = false
                 return@forEachIndexed
             }
             if (entry.licenseStatus != CONFIRMED_LICENSE) errors += "$label licenseStatus must be confirmed"
             validateMetadata(entry, label, errors)
-            if (entry.bytes < 0) errors += "$label declares a negative byte count"
-            if (!SHA256_PATTERN.matches(entry.sha256)) errors += "$label has an invalid SHA-256"
+            if (entry.bytes < 0) {
+                errors += "$label declares a negative byte count"
+                runtimeValid = false
+            }
+            if (!SHA256_PATTERN.matches(entry.sha256)) {
+                errors += "$label has an invalid SHA-256"
+                runtimeValid = false
+            }
             val bytes = try {
                 assetReader(entry.assetPath)
             } catch (_: Exception) {
                 errors += "$label asset does not exist: ${entry.assetPath}"
+                runtimeValid = false
                 return@forEachIndexed
             }
             totalBytes += bytes.size.toLong()
-            if (bytes.size.toLong() != entry.bytes) errors += "$label byte count mismatch: expected ${entry.bytes}, got ${bytes.size}"
-            if (sha256(bytes) != entry.sha256.lowercase()) errors += "$label SHA-256 mismatch"
+            if (bytes.size.toLong() != entry.bytes) {
+                errors += "$label byte count mismatch: expected ${entry.bytes}, got ${bytes.size}"
+                runtimeValid = false
+            }
+            if (sha256(bytes) != entry.sha256.lowercase()) {
+                errors += "$label SHA-256 mismatch"
+                runtimeValid = false
+            }
             val inspection = GlbModelInspector.inspect(bytes, entry)
             modelReports += inspection.metrics
             if (inspection.errors.isNotEmpty()) {
-                structureValid = false
+                runtimeValid = false
                 errors += inspection.errors.map { "$label $it" }
             }
         }
@@ -62,10 +82,15 @@ class BodyModelValidator {
             errors = errors,
             modelCount = manifest.entries.size,
             totalBytes = totalBytes,
-            runtimeValid = structureValid,
-            structureValid = structureValid,
+            runtimeValid = runtimeValid,
+            structureValid = runtimeValid,
             models = modelReports,
             licenseStatus = if (releaseAuthorizationBlocked) "blocked" else "confirmed",
+            authorization = BodyModelAuthorization(
+                licenseStatus = if (releaseAuthorizationBlocked) "blocked" else "confirmed",
+                apkRedistribution = if (manifest.entries.all { it.apkRedistributionAuthorization == CONFIRMED_LICENSE }) "confirmed" else "blocked",
+                releaseGate = if (releaseAuthorizationBlocked) "blocked" else "authorized",
+            ),
         )
     }
 

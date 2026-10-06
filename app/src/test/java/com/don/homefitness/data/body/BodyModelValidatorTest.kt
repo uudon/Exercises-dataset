@@ -15,6 +15,7 @@ class BodyModelValidatorTest {
 
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("does not exist") })
+        assertFalse(result.runtimeValid)
     }
 
     @Test
@@ -25,6 +26,7 @@ class BodyModelValidatorTest {
 
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("SHA-256 mismatch") })
+        assertFalse(result.runtimeValid)
     }
 
     @Test
@@ -96,6 +98,27 @@ class BodyModelValidatorTest {
 
         assertFalse(result.valid)
         assertTrue(result.errors.any { it.contains("negative byte count") })
+        assertFalse(result.runtimeValid)
+    }
+
+    @Test
+    fun byteCountMismatchDisablesRuntime() {
+        val result = BodyModelValidator().validate(manifest(entry(bytes = 4, sha256 = sha256("abc")))) { "abc".toByteArray() }
+
+        assertFalse(result.valid)
+        assertFalse(result.runtimeValid)
+        assertTrue(result.errors.any { it.contains("byte count mismatch") })
+    }
+
+    @Test
+    fun corruptGlbDisablesRuntime() {
+        val valid = minimalGlb()
+        val corrupt = valid.copyOf().also { it[0] = 'x'.code.toByte() }
+        val result = BodyModelValidator().validate(manifest(entry(bytes = corrupt.size, sha256 = sha256(corrupt)))) { corrupt }
+
+        assertFalse(result.valid)
+        assertFalse(result.runtimeValid)
+        assertTrue(result.errors.any { it.contains("GLB structure is invalid") })
     }
 
     @Test
@@ -142,17 +165,27 @@ class BodyModelValidatorTest {
         license: String = "CC-BY-4.0",
         attribution: String = "Example Author",
         apkRedistributionAuthorization: String = "confirmed",
+        meshes: Int = 1,
+        materials: Int = 1,
+        triangles: Int = 1,
+        selectableMeshes: Int = 1,
+        requiredRegions: String = "[\"abs\"]",
     ) = TestEntry(
-        "{\"gender\":\"$gender\",\"assetPath\":\"$path\",\"sha256\":\"$sha256\",\"bytes\":$bytes,\"licenseStatus\":\"$licenseStatus\",\"sourceUrlOrRepository\":\"$sourceUrlOrRepository\",\"sourceCommitOrVersion\":\"$sourceCommitOrVersion\",\"license\":\"$license\",\"attribution\":\"$attribution\",\"apkRedistributionAuthorization\":\"$apkRedistributionAuthorization\"}",
+        "{\"gender\":\"$gender\",\"assetPath\":\"$path\",\"sha256\":\"$sha256\",\"bytes\":$bytes,\"licenseStatus\":\"$licenseStatus\",\"sourceUrlOrRepository\":\"$sourceUrlOrRepository\",\"sourceCommitOrVersion\":\"$sourceCommitOrVersion\",\"license\":\"$license\",\"attribution\":\"$attribution\",\"apkRedistributionAuthorization\":\"$apkRedistributionAuthorization\",\"meshes\":$meshes,\"materials\":$materials,\"triangles\":$triangles,\"selectableMeshes\":$selectableMeshes,\"requiredRegions\":$requiredRegions}",
     )
 
     private data class TestEntry(val json: String)
 
     private fun minimalGlb(): ByteArray {
-        val json = "{\"asset\":{\"version\":\"2.0\"},\"nodes\":[],\"meshes\":[],\"materials\":[],\"accessors\":[]}"
-            .toByteArray()
+        val positions = java.nio.ByteBuffer.allocate(36).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+            .putFloat(0f).putFloat(0f).putFloat(0f)
+            .putFloat(1f).putFloat(0f).putFloat(0f)
+            .putFloat(0f).putFloat(1f).putFloat(0f).array()
+        val bin = positions + byteArrayOf(0, 1, 2)
+        val json = "{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":40}],\"bufferViews\":[{\"buffer\":0,\"byteOffset\":0,\"byteLength\":36},{\"buffer\":0,\"byteOffset\":36,\"byteLength\":3}],\"accessors\":[{\"bufferView\":0,\"componentType\":5126,\"count\":3,\"type\":\"VEC3\"},{\"bufferView\":1,\"componentType\":5121,\"count\":3,\"type\":\"SCALAR\"}],\"materials\":[{}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0},\"indices\":1,\"material\":0}]}],\"nodes\":[{\"name\":\"abs\",\"mesh\":0,\"extras\":{\"region_id\":\"abs\",\"selectable\":true}}]}".toByteArray()
         val paddedJson = json + ByteArray((4 - json.size % 4) % 4) { 0x20 }
-        val length = 12 + 8 + paddedJson.size
+        val paddedBin = bin + ByteArray((4 - bin.size % 4) % 4)
+        val length = 12 + 8 + paddedJson.size + 8 + paddedBin.size
         return java.nio.ByteBuffer.allocate(length).order(java.nio.ByteOrder.LITTLE_ENDIAN)
             .putInt(0x46546C67)
             .putInt(2)
@@ -160,6 +193,9 @@ class BodyModelValidatorTest {
             .putInt(paddedJson.size)
             .putInt(0x4E4F534A)
             .put(paddedJson)
+            .putInt(paddedBin.size)
+            .putInt(0x004E4942)
+            .put(paddedBin)
             .array()
     }
 

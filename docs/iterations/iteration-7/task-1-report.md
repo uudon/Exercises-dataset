@@ -23,11 +23,17 @@ the manifest SHA-256 and byte counts were updated.
 ## Verification
 
 - Generator structural assertions: passed for both GLBs.
-- Independent structural check: passed; GLB header/length, buffer bounds, all
-  11 region IDs, and explicit biceps/triceps/quadriceps/hamstrings nodes were
-  verified.
+- Final local integrity verifier: technical inspection passed; it reads the
+  actual GLB bytes, validates header/length, JSON and BIN chunks, buffer and
+  accessor bounds, node/mesh/material/index references, node region IDs, and
+  generated metrics. It does not trust `stats.json`.
+- Required region coverage: 11 regions for each model.
+- Current generated metrics: 1,535,812 total bytes; male 730,028 bytes / 36
+  meshes / 28,928 triangles / 20 selectable meshes; female 805,784 bytes / 41
+  meshes / 31,872 triangles / 22 selectable meshes.
 - `./gradlew :app:testDebugUnitTest --tests '*BodyModelValidatorTest'`: passed.
-- `./tools/verify-body-models.sh`: intentionally blocked (exit 8). Both local
-  models report unconfirmed license/source metadata and APK redistribution
-  authorization. The supplied source has no formal external URL or version;
-  this report does not claim release authorization.
+- `./tools/verify-body-models.sh`: intentionally blocked (exit 8) only by the
+  separate release authorization gate. Both local models are runtime-valid and
+  structure-valid; license/source metadata and APK redistribution authorization
+  remain unconfirmed. The supplied source has no formal external URL or
+  version; this report does not claim release authorization.
