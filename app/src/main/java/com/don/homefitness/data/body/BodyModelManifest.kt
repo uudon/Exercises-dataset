@@ -12,6 +12,11 @@ data class BodyModelEntry(
     val sha256: String,
     val bytes: Long,
     val licenseStatus: String,
+    val sourceUrlOrRepository: String,
+    val sourceCommitOrVersion: String,
+    val license: String,
+    val attribution: String,
+    val apkRedistributionAuthorization: String,
 )
 
 @Serializable

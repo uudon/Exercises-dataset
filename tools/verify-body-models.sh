@@ -19,7 +19,7 @@ model_count="$(jq '.entries | length' "$manifest")"
 male_seen=0
 female_seen=0
 
-while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status; do
+while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status source_url source_commit license attribution apk_authorization; do
     if [[ "$gender" == "MALE" ]]; then
         [[ "$male_seen" -eq 1 ]] && { echo "duplicate gender: $gender" >>"$tmp_report"; failures=$((failures + 1)); }
         male_seen=1
@@ -30,11 +30,26 @@ while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status; 
     if [[ "$gender" != "MALE" && "$gender" != "FEMALE" ]]; then
         echo "invalid gender: $gender" >>"$tmp_report"; failures=$((failures + 1))
     fi
-    if [[ -z "$path" || "$path" == /* || "$path" == *\\* || "$path" == *:* || "$path" == *".."* ]]; then
+    if [[ -z "$path" || "$path" == /* || "$path" == *\\* || "$path" =~ ^[A-Za-z][A-Za-z0-9+.-]*: || "$path" == ../* || "$path" == */../* || "$path" == */.. ]]; then
         echo "non-relative android_asset path: $path" >>"$tmp_report"; failures=$((failures + 1)); continue
     fi
     if [[ "$license_status" != "confirmed" ]]; then
         echo "licenseStatus is not confirmed: $gender" >>"$tmp_report"; failures=$((failures + 1))
+    fi
+    if [[ -z "$source_url" || "$source_url" == "missing" || "$source_url" == "blocked" || "$source_url" == "not supplied" || "$source_url" == "not confirmed" ]]; then
+        echo "source URL or repository is missing or blocked: $gender" >>"$tmp_report"; failures=$((failures + 1))
+    fi
+    if [[ -z "$source_commit" || "$source_commit" == "missing" || "$source_commit" == "blocked" || "$source_commit" == "not supplied" || "$source_commit" == "not confirmed" ]]; then
+        echo "source commit or version is missing or blocked: $gender" >>"$tmp_report"; failures=$((failures + 1))
+    fi
+    if [[ -z "$license" || "$license" == "missing" || "$license" == "blocked" || "$license" == "not supplied" || "$license" == "not confirmed" ]]; then
+        echo "license is missing or blocked: $gender" >>"$tmp_report"; failures=$((failures + 1))
+    fi
+    if [[ -z "$attribution" || "$attribution" == "missing" || "$attribution" == "blocked" || "$attribution" == "not supplied" || "$attribution" == "not confirmed" ]]; then
+        echo "attribution is missing or blocked: $gender" >>"$tmp_report"; failures=$((failures + 1))
+    fi
+    if [[ "$apk_authorization" != "confirmed" ]]; then
+        echo "APK redistribution authorization is not confirmed: $gender" >>"$tmp_report"; failures=$((failures + 1))
     fi
     file="$assets_root/$path"
     if [[ ! -f "$file" ]]; then
@@ -49,7 +64,7 @@ while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status; 
     if [[ "$expected_sha" != "$actual_sha" ]]; then
         echo "SHA-256 mismatch: $path" >>"$tmp_report"; failures=$((failures + 1))
     fi
-done < <(jq -r '.entries[] | [.gender, .assetPath, (.bytes|tostring), .sha256, .licenseStatus] | @tsv' "$manifest")
+done < <(jq -r '.entries[] | [.gender, .assetPath, (.bytes|tostring), .sha256, .licenseStatus, .sourceUrlOrRepository, .sourceCommitOrVersion, .license, .attribution, .apkRedistributionAuthorization] | @tsv' "$manifest")
 
 if [[ "$male_seen" -eq 0 ]]; then echo "missing gender: MALE" >>"$tmp_report"; failures=$((failures + 1)); fi
 if [[ "$female_seen" -eq 0 ]]; then echo "missing gender: FEMALE" >>"$tmp_report"; failures=$((failures + 1)); fi

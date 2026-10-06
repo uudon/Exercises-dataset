@@ -53,6 +53,37 @@ class BodyModelValidatorTest {
     }
 
     @Test
+    fun missingSourceMetadataIsRejected() {
+        val manifest = manifest(entry(sourceUrlOrRepository = "", bytes = 3, sha256 = sha256("abc")))
+
+        val result = BodyModelValidator().validate(manifest) { "abc".toByteArray() }
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("source URL or repository is missing or blocked") })
+    }
+
+    @Test
+    fun blockedApkAuthorizationIsRejected() {
+        val manifest = manifest(entry(apkRedistributionAuthorization = "blocked", bytes = 3, sha256 = sha256("abc")))
+
+        val result = BodyModelValidator().validate(manifest) { "abc".toByteArray() }
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("APK redistribution authorization must be confirmed") })
+    }
+
+    @Test
+    fun duplicateGenderIsRejected() {
+        val first = entry(gender = "MALE", bytes = 3, sha256 = sha256("abc"))
+        val second = entry(gender = "MALE", path = "body/male/other.glb", bytes = 3, sha256 = sha256("abc"))
+
+        val result = BodyModelValidator().validate("{\"entries\":[${first.json},${second.json}]}") { "abc".toByteArray() }
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("MALE model is not unique") })
+    }
+
+    @Test
     fun twoValidModelsAreAccepted() {
         val male = entry(gender = "MALE", path = "body/male/body.glb", bytes = 3, sha256 = sha256("abc"))
         val female = entry(gender = "FEMALE", path = "body/female/body.glb", bytes = 4, sha256 = sha256("defg"))
@@ -80,8 +111,13 @@ class BodyModelValidatorTest {
         bytes: Int = 3,
         sha256: String = sha256("abc"),
         licenseStatus: String = "confirmed",
+        sourceUrlOrRepository: String = "https://example.test/body",
+        sourceCommitOrVersion: String = "v1.0.0",
+        license: String = "CC-BY-4.0",
+        attribution: String = "Example Author",
+        apkRedistributionAuthorization: String = "confirmed",
     ) = TestEntry(
-        "{\"gender\":\"$gender\",\"assetPath\":\"$path\",\"sha256\":\"$sha256\",\"bytes\":$bytes,\"licenseStatus\":\"$licenseStatus\"}",
+        "{\"gender\":\"$gender\",\"assetPath\":\"$path\",\"sha256\":\"$sha256\",\"bytes\":$bytes,\"licenseStatus\":\"$licenseStatus\",\"sourceUrlOrRepository\":\"$sourceUrlOrRepository\",\"sourceCommitOrVersion\":\"$sourceCommitOrVersion\",\"license\":\"$license\",\"attribution\":\"$attribution\",\"apkRedistributionAuthorization\":\"$apkRedistributionAuthorization\"}",
     )
 
     private data class TestEntry(val json: String)

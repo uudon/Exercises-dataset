@@ -25,6 +25,7 @@ class BodyModelValidator {
                 return@forEachIndexed
             }
             if (entry.licenseStatus != CONFIRMED_LICENSE) errors += "$label licenseStatus must be confirmed"
+            validateMetadata(entry, label, errors)
             if (entry.bytes < 0) errors += "$label declares a negative byte count"
             if (!SHA256_PATTERN.matches(entry.sha256)) errors += "$label has an invalid SHA-256"
             val bytes = try {
@@ -39,6 +40,24 @@ class BodyModelValidator {
         }
         return BodyModelCheckReport(errors.isEmpty(), errors, manifest.entries.size, totalBytes)
     }
+
+    private fun validateMetadata(entry: BodyModelEntry, label: String, errors: MutableList<String>) {
+        val metadata = listOf(
+            "source URL or repository" to entry.sourceUrlOrRepository,
+            "source commit or version" to entry.sourceCommitOrVersion,
+            "license" to entry.license,
+            "attribution" to entry.attribution,
+        )
+        metadata.forEach { (name, value) ->
+            if (value.isBlank() || isBlockedValue(value)) errors += "$label $name is missing or blocked"
+        }
+        if (entry.apkRedistributionAuthorization != CONFIRMED_LICENSE) {
+            errors += "$label APK redistribution authorization must be confirmed"
+        }
+    }
+
+    private fun isBlockedValue(value: String): Boolean =
+        value.trim().lowercase() in setOf("missing", "blocked", "not supplied", "not confirmed")
 
     private fun isRelativeAssetPath(path: String): Boolean =
         path.isNotBlank() && !path.startsWith('/') && !path.contains('\\') &&
