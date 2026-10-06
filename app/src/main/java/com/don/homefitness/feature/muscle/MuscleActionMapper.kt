@@ -1,9 +1,19 @@
 package com.don.homefitness.feature.muscle
 
 import com.don.homefitness.core.model.TrainingLocation
+import com.don.homefitness.data.body.BodyGender
+import com.don.homefitness.data.body.BodyMappingCheckReport
+import com.don.homefitness.data.body.BodyMappingValidator
+import com.don.homefitness.data.body.BodyModelCheckReport
 import com.don.homefitness.data.body.MuscleActionMapping
+import com.don.homefitness.data.body.MuscleRegion
 import com.don.homefitness.data.catalog.CatalogExercise
+import com.don.homefitness.data.catalog.CatalogRepository
 import com.don.homefitness.data.catalog.filterExercisesAtLocation
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 data class MuscleActionGroups(
     val primary: List<CatalogExercise>,
@@ -13,12 +23,16 @@ data class MuscleActionGroups(
 class MuscleActionMapper(
     private val exercises: List<CatalogExercise>,
     private val mappings: List<MuscleActionMapping>,
+    private val validation: BodyMappingCheckReport = BodyMappingCheckReport(true, emptyList()),
 ) {
+    val initializationError: String? = validation.errors.takeIf { !validation.valid }?.joinToString("; ")
+
     fun actionsFor(
         muscleGroupId: String,
         location: TrainingLocation,
         availableEquipment: Set<String>,
     ): MuscleActionGroups {
+        if (!validation.valid) return MuscleActionGroups(emptyList(), emptyList())
         val mapping = mappings.firstOrNull { it.muscleGroupId == muscleGroupId }
             ?: return MuscleActionGroups(emptyList(), emptyList())
         if (location != TrainingLocation.HOME) return MuscleActionGroups(emptyList(), emptyList())
@@ -31,6 +45,7 @@ class MuscleActionMapper(
             equipment = null,
             availableEquipment = availableEquipment,
         ).filter { it.equipment in HOME_EQUIPMENT }
+            .filter { exercise -> exercise.requiredEquipment.all { it in HOME_EQUIPMENT } }
             .associateBy(CatalogExercise::id)
         return MuscleActionGroups(
             primary = mapping.primaryExerciseIds.mapNotNull(available::get),
@@ -38,7 +53,71 @@ class MuscleActionMapper(
         )
     }
 
-    private companion object {
-        val HOME_EQUIPMENT = setOf("body weight", "dumbbell")
+    fun observeActionsFor(
+        repository: CatalogRepository,
+        muscleGroupId: String,
+        availableEquipment: Set<String>,
+    ): Flow<MuscleActionGroups> = repository.observeExercises(
+        query = "",
+        bodyPart = null,
+        equipment = null,
+        availableEquipment = availableEquipment,
+        location = TrainingLocation.HOME,
+    ).map { catalogExercises ->
+        MuscleActionMapper(catalogExercises, mappings, validation).actionsFor(
+            muscleGroupId = muscleGroupId,
+            location = TrainingLocation.HOME,
+            availableEquipment = availableEquipment,
+        )
     }
+
+    companion object {
+        private val HOME_EQUIPMENT = setOf("body weight", "dumbbell")
+
+        fun fromResources(
+            regionsJson: String,
+            mappingsJson: String,
+            modelCheckReportJson: String,
+            catalogExercises: List<CatalogExercise>,
+            modelNodeIdsByGender: Map<BodyGender, Set<String>>,
+        ): MuscleActionMapper {
+            return try {
+                val json = Json { ignoreUnknownKeys = true }
+                val regions = json.decodeFromString<List<MuscleRegion>>(regionsJson)
+                val mappings = json.decodeFromString<List<MuscleActionMapping>>(mappingsJson)
+                val report = json.decodeFromString<ModelCheckReportResource>(modelCheckReportJson)
+                val validation = BodyMappingValidator().validate(
+                    regions = regions,
+                    mappings = mappings,
+                    catalogExercises = catalogExercises,
+                    modelReport = BodyModelCheckReport(
+                        valid = report.valid,
+                        errors = report.errors,
+                        modelCount = report.modelCount,
+                        totalBytes = report.totalBytes,
+                    ),
+                    modelNodeIdsByGender = modelNodeIdsByGender,
+                )
+                MuscleActionMapper(catalogExercises, mappings, validation)
+            } catch (error: Exception) {
+                MuscleActionMapper(
+                    exercises = emptyList(),
+                    mappings = emptyList(),
+                    validation = BodyMappingCheckReport(
+                        valid = false,
+                        errors = listOf("mapping resource initialization failed: ${error.message ?: "unknown error"}"),
+                    ),
+                )
+            }
+        }
+    }
+
 }
+
+@Serializable
+private data class ModelCheckReportResource(
+    val valid: Boolean,
+    val errors: List<String> = emptyList(),
+    val modelCount: Int = 0,
+    val totalBytes: Long = 0L,
+)

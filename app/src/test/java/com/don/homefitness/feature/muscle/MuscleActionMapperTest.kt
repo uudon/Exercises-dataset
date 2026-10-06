@@ -42,12 +42,46 @@ class MuscleActionMapperTest {
         assertTrue(result.secondary.isEmpty())
     }
 
+    @Test
+    fun rejectsUnsupportedEquipmentEvenWhenSelectedEquipmentIncludesIt() {
+        val mapper = MuscleActionMapper(
+            exercises = listOf(
+                exercise("0001", "pectorals", equipment = "body weight", requiredEquipment = setOf("body weight", "barbell")),
+                exercise("0002", "pectorals", equipment = "dumbbell", requiredEquipment = setOf("dumbbell", "kettlebell")),
+            ),
+            mappings = listOf(MuscleActionMapping("chest", listOf("0001", "0002"), emptyList())),
+        )
+
+        val result = mapper.actionsFor(
+            "chest",
+            TrainingLocation.HOME,
+            setOf("body weight", "dumbbell", "barbell", "kettlebell"),
+        )
+
+        assertTrue(result.primary.isEmpty())
+    }
+
+    @Test
+    fun invalidResourceInitializationReturnsSafeEmptyResultAndError() {
+        val mapper = MuscleActionMapper.fromResources(
+            regionsJson = "[]",
+            mappingsJson = "[]",
+            modelCheckReportJson = "{\"valid\":true,\"errors\":[],\"modelCount\":2,\"totalBytes\":10}",
+            catalogExercises = listOf(exercise("0001", "pectorals", equipment = "body weight")),
+            modelNodeIdsByGender = emptyMap(),
+        )
+
+        assertTrue(mapper.initializationError?.contains("coverage") == true)
+        assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).primary.isEmpty())
+    }
+
     private fun exercise(
         id: String,
         target: String,
         nameZh: String = id,
         equipment: String,
         homeEligible: Boolean = true,
+        requiredEquipment: Set<String> = setOf(equipment),
     ) = CatalogExercise(
         id = id,
         originalName = id,
@@ -59,7 +93,7 @@ class MuscleActionMapperTest {
         secondaryMuscles = emptyList(),
         instructionsZh = "说明",
         instructionStepsZh = listOf("步骤"),
-        requiredEquipment = setOf(equipment),
+        requiredEquipment = requiredEquipment,
         homeEligible = homeEligible,
         reviewStatus = "manually-reviewed",
         sourceCommit = "test",

@@ -95,21 +95,44 @@ class BodyMappingValidatorTest {
     @Test
     fun acceptsExplicitChestAndBackMappingsForBothGenders() {
         val result = BodyMappingValidator().validate(
-            regions = listOf(region("chest"), region("back")),
-            mappings = listOf(
-                mapping("chest", primary = listOf("0001")),
-                mapping("back", primary = listOf("0002")),
-            ),
-            catalogExercises = listOf(
-                exercise("0001", target = "pectorals"),
-                exercise("0002", target = "lats"),
-            ),
+            regions = canonicalRegions(),
+            mappings = BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.map { mapping(it, emptyList()) },
+            catalogExercises = emptyList(),
             modelReport = validModelReport(),
-            modelNodeIdsByGender = nodesFor("chest", "back"),
+            modelNodeIdsByGender = nodesFor(*BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.toTypedArray()),
         )
 
         assertTrue(result.valid)
         assertTrue(result.errors.isEmpty())
+    }
+
+    @Test
+    fun rejectsPartialRegionAndMappingCoverage() {
+        val result = BodyMappingValidator().validate(
+            regions = listOf(region("chest"), region("back")),
+            mappings = listOf(mapping("chest", emptyList()), mapping("back", emptyList())),
+            catalogExercises = emptyList(),
+            modelReport = validModelReport(),
+            modelNodeIdsByGender = nodesFor("chest", "back"),
+        )
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("region coverage") })
+        assertTrue(result.errors.any { it.contains("mapping coverage") })
+    }
+
+    @Test
+    fun rejectsTwoRegionsForOneMuscleGroupEvenWhenIdsDiffer() {
+        val result = BodyMappingValidator().validate(
+            regions = canonicalRegions().plus(region("chest.extra", group = "chest")),
+            mappings = BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.map { mapping(it, emptyList()) },
+            catalogExercises = emptyList(),
+            modelReport = validModelReport(),
+            modelNodeIdsByGender = nodesFor(*BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.toTypedArray()),
+        )
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("more than one region") && it.contains("chest") })
     }
 
     private fun region(id: String, group: String = id) = MuscleRegion(
@@ -143,6 +166,8 @@ class BodyMappingValidatorTest {
     )
 
     private fun validModelReport() = BodyModelCheckReport(true, emptyList(), 2, 10)
+
+    private fun canonicalRegions() = BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.map(::region)
 
     private fun nodesFor(vararg ids: String) = BodyGender.entries.associateWith { gender ->
         ids.map { "${gender.name.lowercase()}.$it" }.toSet()

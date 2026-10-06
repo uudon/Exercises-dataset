@@ -18,6 +18,13 @@ class BodyMappingValidator(
         regionsById.filterValues { it.size > 1 }.keys.forEach {
             errors += "duplicate regionId: $it"
         }
+        val regionGroups = regions.map(MuscleRegion::muscleGroupId)
+        if (regionGroups.size != CANONICAL_MUSCLE_GROUP_IDS.size || regionGroups.toSet() != CANONICAL_MUSCLE_GROUP_IDS) {
+            errors += "region coverage must contain exactly the 11 canonical muscleGroupIds"
+        }
+        regionGroups.groupingBy { it }.eachCount().filterValues { it > 1 }.keys.forEach {
+            errors += "more than one region maps to muscleGroupId: $it"
+        }
         if (!modelReport.valid) errors += "model-check-report is not valid: ${modelReport.errors.joinToString()}"
 
         regions.forEach { region ->
@@ -42,6 +49,10 @@ class BodyMappingValidator(
         val mappingsByGroup = mappings.groupBy(MuscleActionMapping::muscleGroupId)
         mappingsByGroup.filterValues { it.size > 1 }.keys.forEach {
             errors += "duplicate mapping for muscleGroupId: $it"
+        }
+        val mappingGroups = mappings.map(MuscleActionMapping::muscleGroupId)
+        if (mappingGroups.size != CANONICAL_MUSCLE_GROUP_IDS.size || mappingGroups.toSet() != CANONICAL_MUSCLE_GROUP_IDS) {
+            errors += "mapping coverage must contain exactly the 11 canonical muscleGroupIds"
         }
 
         mappings.forEach { mapping ->
