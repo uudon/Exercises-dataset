@@ -73,8 +73,12 @@ class BodyMappingValidator(
         return BodyMappingCheckReport(
             valid = errors.isEmpty(),
             errors = errors,
-            releaseAuthorizationBlocked = modelReport.licenseStatus != "confirmed" ||
-                (!modelReport.valid && modelReport.runtimeValid && modelReport.structureValid),
+            releaseAuthorizationBlocked = !modelReport.runtimeValid ||
+                !modelReport.structureValid ||
+                modelReport.licenseStatus != "confirmed" ||
+                modelReport.authorization.licenseStatus != "confirmed" ||
+                modelReport.authorization.apkRedistribution != "confirmed" ||
+                modelReport.authorization.releaseGate != "authorized",
         )
     }
 

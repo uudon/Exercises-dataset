@@ -137,7 +137,7 @@ def main(repo: Path) -> int:
     for gender in ("MALE", "FEMALE"):
         if gender not in genders: report["errors"].append(f"missing gender: {gender}"); technical_ok = False
     report["runtimeValid"] = technical_ok; report["structureValid"] = technical_ok; report["licenseStatus"] = "confirmed" if authorization_ok else "blocked"
-    report["authorization"] = {"licenseStatus": report["licenseStatus"], "apkRedistribution": "confirmed" if authorization_ok else "blocked", "releaseGate": "authorized" if authorization_ok else "blocked"}
+    report["authorization"] = {"licenseStatus": report["licenseStatus"], "apkRedistribution": "confirmed" if authorization_ok else "blocked", "releaseGate": "authorized" if authorization_ok and technical_ok else "blocked"}
     report["valid"] = technical_ok and authorization_ok and not report["errors"]
     print(json.dumps(report, indent=2)); return 0 if report["valid"] else max(1, len(report["errors"]))
 

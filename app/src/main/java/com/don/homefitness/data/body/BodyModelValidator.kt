@@ -73,10 +73,15 @@ class BodyModelValidator {
                 errors += inspection.errors.map { "$label $it" }
             }
         }
-        val releaseAuthorizationBlocked = errors.any {
-            it.contains("licenseStatus") || it.contains("authorization") || it.contains("source URL") ||
-                it.contains("source commit") || it.contains("license is") || it.contains("attribution")
+        val authorizationValid = manifest.entries.all { entry ->
+            entry.licenseStatus == CONFIRMED_LICENSE &&
+                !isBlockedValue(entry.sourceUrlOrRepository) &&
+                !isBlockedValue(entry.sourceCommitOrVersion) &&
+                !isBlockedValue(entry.license) &&
+                !isBlockedValue(entry.attribution) &&
+                entry.apkRedistributionAuthorization == CONFIRMED_LICENSE
         }
+        val releaseAuthorizationBlocked = !runtimeValid || !authorizationValid
         return BodyModelCheckReport(
             valid = errors.isEmpty(),
             errors = errors,
@@ -85,10 +90,10 @@ class BodyModelValidator {
             runtimeValid = runtimeValid,
             structureValid = runtimeValid,
             models = modelReports,
-            licenseStatus = if (releaseAuthorizationBlocked) "blocked" else "confirmed",
+            licenseStatus = if (authorizationValid) "confirmed" else "blocked",
             authorization = BodyModelAuthorization(
-                licenseStatus = if (releaseAuthorizationBlocked) "blocked" else "confirmed",
-                apkRedistribution = if (manifest.entries.all { it.apkRedistributionAuthorization == CONFIRMED_LICENSE }) "confirmed" else "blocked",
+                licenseStatus = if (authorizationValid) "confirmed" else "blocked",
+                apkRedistribution = if (authorizationValid) "confirmed" else "blocked",
                 releaseGate = if (releaseAuthorizationBlocked) "blocked" else "authorized",
             ),
         )

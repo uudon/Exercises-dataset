@@ -15,7 +15,7 @@ import org.junit.Test
 
 class MuscleActionMapperTest {
     @Test
-    fun authorizationBlockedDoesNotEraseTechnicallyValidActions() {
+    fun authorizationBlockedKeepsRuntimeActionsAvailableAndBlocksRelease() {
         val mapper = MuscleActionMapper(
             exercises = listOf(exercise("0001", "pectorals", equipment = "body weight")),
             mappings = listOf(MuscleActionMapping("chest", listOf("0001"), emptyList())),

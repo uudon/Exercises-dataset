@@ -118,6 +118,7 @@ class BodyModelValidatorTest {
 
         assertFalse(result.valid)
         assertFalse(result.runtimeValid)
+        assertEquals("blocked", result.authorization.releaseGate)
         assertTrue(result.errors.any { it.contains("GLB structure is invalid") })
     }
 

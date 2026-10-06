@@ -118,8 +118,35 @@ class BodyMappingValidatorTest {
         )
 
         assertFalse(result.valid)
-        assertFalse(result.releaseAuthorizationBlocked)
+        assertTrue(result.releaseAuthorizationBlocked)
         assertTrue(result.errors.any { it.contains("structure") })
+    }
+
+    @Test
+    fun blocksReleaseForAuthorizationGateEvenWhenStructureIsRuntimeValid() {
+        val result = BodyMappingValidator().validate(
+            regions = canonicalRegions(),
+            mappings = BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.map { mapping(it, emptyList()) },
+            catalogExercises = emptyList(),
+            modelReport = BodyModelCheckReport(
+                valid = false,
+                errors = listOf("licenseStatus is not confirmed"),
+                modelCount = 2,
+                totalBytes = 10,
+                runtimeValid = true,
+                structureValid = true,
+                licenseStatus = "blocked",
+                authorization = BodyModelAuthorization(
+                    licenseStatus = "blocked",
+                    apkRedistribution = "blocked",
+                    releaseGate = "blocked",
+                ),
+            ),
+            modelNodeIdsByGender = nodesFor(*BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.toTypedArray()),
+        )
+
+        assertTrue(result.valid)
+        assertTrue(result.releaseAuthorizationBlocked)
     }
 
     @Test
