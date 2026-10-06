@@ -120,11 +120,49 @@ def is_relative_asset_path(path) -> bool:
         return False
     return re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", path) is None
 
+def manifest_structure_errors(entries) -> list[str]:
+    if not isinstance(entries, list):
+        return ["manifest entries must be an array"]
+    errors = []
+    required_types = {
+        "gender": str,
+        "assetPath": str,
+        "sha256": str,
+        "bytes": int,
+        "meshes": int,
+        "materials": int,
+        "triangles": int,
+        "selectableMeshes": int,
+        "requiredRegions": list,
+    }
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            errors.append(f"entry[{index}] must be an object")
+            continue
+        for key, expected_type in required_types.items():
+            value = entry.get(key)
+            if expected_type is int and isinstance(value, bool):
+                valid = False
+            else:
+                valid = isinstance(value, expected_type)
+            if not valid:
+                errors.append(f"entry[{index}] {key} is not a {expected_type.__name__}")
+        regions = entry.get("requiredRegions")
+        if isinstance(regions, list) and any(not isinstance(region, str) for region in regions):
+            errors.append(f"entry[{index}] requiredRegions must contain only strings")
+    return errors
+
 def main(repo: Path) -> int:
     report = {"valid": False, "runtimeValid": False, "structureValid": False, "errors": [], "modelCount": 0, "totalBytes": 0, "models": [], "licenseStatus": "blocked", "authorization": {"licenseStatus": "blocked", "apkRedistribution": "blocked", "releaseGate": "blocked"}}
     try: manifest = json.loads((repo / "app/src/main/assets/body/model-manifest.json").read_text()); entries = manifest["entries"]
     except Exception as exc: report["errors"] = [f"manifest file is missing or invalid: {exc}"]; print(json.dumps(report, indent=2)); return 1
-    report["modelCount"] = len(entries); technical_ok = True; authorization_ok = True; genders = []
+    report["modelCount"] = len(entries) if isinstance(entries, list) else 0
+    structure_errors = manifest_structure_errors(entries)
+    if structure_errors:
+        report["errors"] = structure_errors
+        print(json.dumps(report, indent=2))
+        return 1
+    technical_ok = True; authorization_ok = True; genders = []
     for entry in entries:
         gender, path = entry.get("gender"), entry.get("assetPath"); genders.append(gender)
         if gender not in {"MALE", "FEMALE"} or genders.count(gender) > 1: report["errors"].append(f"entry {gender} gender is invalid or duplicated"); technical_ok = False
