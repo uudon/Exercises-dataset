@@ -5,6 +5,7 @@ export LC_ALL=C
 repo_root="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
 manifest="$repo_root/app/src/main/assets/body/model-manifest.json"
 assets_root="$repo_root/app/src/main/assets"
+stats_file="$repo_root/GLB/fitness_human_glb/stats.json"
 
 if [[ ! -f "$manifest" ]] || ! jq empty "$manifest" >/dev/null 2>&1; then
     jq -n '{valid:false, errors:["manifest file is missing or invalid"], modelCount:0, totalBytes:0}'
@@ -18,6 +19,12 @@ total_bytes=0
 model_count="$(jq '.entries | length' "$manifest")"
 male_seen=0
 female_seen=0
+model_reports='[]'
+
+if [[ ! -f "$stats_file" ]] || ! jq empty "$stats_file" >/dev/null 2>&1; then
+    echo "generated model stats are missing or invalid: $stats_file" >&2
+    failures=$((failures + 1))
+fi
 
 is_blocked_metadata() {
     local normalized
@@ -82,6 +89,18 @@ while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status s
     if [[ "$normalized_expected_sha" != "$actual_sha" ]]; then
         echo "SHA-256 mismatch: $path" >>"$tmp_report"; failures=$((failures + 1))
     fi
+
+    stats_file_name="$(printf '%s' "$gender" | tr '[:upper:]' '[:lower:]').glb"
+    stats_row="$(jq -c --arg file "$stats_file_name" '.[] | select(.file == $file)' "$stats_file" 2>/dev/null || true)"
+    if [[ -z "$stats_row" ]]; then
+        echo "generated stats missing: $stats_file_name" >>"$tmp_report"; failures=$((failures + 1))
+    else
+        stats_bytes="$(jq -r '.bytes' <<<"$stats_row")"
+        if [[ "$stats_bytes" != "$actual_bytes" ]]; then
+            echo "generated stats byte count mismatch: $stats_file_name" >>"$tmp_report"; failures=$((failures + 1))
+        fi
+        model_reports="$(jq -c --arg gender "$gender" --arg path "$path" --argjson stats "$stats_row" '. + [{gender:$gender,assetPath:$path,bytes:$stats.bytes,meshes:$stats.meshes,triangles:$stats.triangles,selectableMeshes:$stats.selectableMeshes,requiredRegions:$stats.requiredRegions}]' <<<"$model_reports")"
+    fi
 done < <(jq -r '.entries[] | [.gender, .assetPath, (.bytes|tostring), .sha256, .licenseStatus, .sourceUrlOrRepository, .sourceCommitOrVersion, .license, .attribution, .apkRedistributionAuthorization] | @tsv' "$manifest")
 
 if [[ "$male_seen" -eq 0 ]]; then echo "missing gender: MALE" >>"$tmp_report"; failures=$((failures + 1)); fi
@@ -89,10 +108,12 @@ if [[ "$female_seen" -eq 0 ]]; then echo "missing gender: FEMALE" >>"$tmp_report
 
 if [[ "$failures" -eq 0 ]]; then
     jq -n --argjson count "$model_count" --argjson bytes "$total_bytes" \
-        '{valid:true, errors:[], modelCount:$count, totalBytes:$bytes}'
+        --argjson models "$model_reports" \
+        '{valid:true, errors:[], modelCount:$count, totalBytes:$bytes, models:$models}'
 else
     jq -n --argjson count "$model_count" --argjson bytes "$total_bytes" \
+        --argjson models "$model_reports" \
         --rawfile error_text "$tmp_report" \
-        '{valid:false, errors:($error_text | split("\n") | map(select(length > 0))), modelCount:$count, totalBytes:$bytes}'
+        '{valid:false, errors:($error_text | split("\n") | map(select(length > 0))), modelCount:$count, totalBytes:$bytes, models:$models}'
 fi
 exit "$failures"

@@ -7,6 +7,27 @@
   ],
   "modelCount": 2,
   "totalBytes": 1535812,
+  "models": [
+    {
+      "gender": "MALE",
+      "assetPath": "body/male/body.glb",
+      "bytes": 730028,
+      "meshes": 36,
+      "triangles": 28928,
+      "selectableMeshes": 20,
+      "requiredRegions": ["abs", "back", "biceps", "calves", "chest", "forearms", "glutes", "hamstrings", "quadriceps", "shoulders", "triceps"]
+    },
+    {
+      "gender": "FEMALE",
+      "assetPath": "body/female/body.glb",
+      "bytes": 805784,
+      "meshes": 41,
+      "triangles": 31872,
+      "selectableMeshes": 22,
+      "requiredRegions": ["abs", "back", "biceps", "calves", "chest", "forearms", "glutes", "hamstrings", "quadriceps", "shoulders", "triceps"]
+    }
+  ],
+  "generatedStatsSource": "GLB/fitness_human_glb/stats.json",
   "mappingStatus": "explicit-region-to-muscle-group-mapping-recorded",
   "nodeInspectionStatus": "male-and-female-GLB-JSON-node-lists-verified-against-muscle-regions",
   "licenseStatus": "blocked",
