@@ -1,9 +1,11 @@
 # Body model assets
 
-The male and female GLB assets are intentionally not included. No candidate
-asset currently has confirmed source provenance, license terms, attribution,
-and permission to redistribute inside the APK.
+The bundled `male/body.glb` and `female/body.glb` files come from the supplied
+local package `GLB/fitness_human_glb`. The supplied README describes them as
+original procedural geometry with no third-party resources and states that the
+content may be modified, used commercially, and distributed with the app.
 
-`model-manifest.json` records the two required asset slots as blocked entries.
-Do not mark them confirmed or add checksums and byte counts until APK
-redistribution authorization is confirmed and the real files are reviewed.
+The package is an offline-only prototype. It has no external textures,
+network resources, skeleton, animation, or medical-anatomy claim. See
+`model-manifest.json` for the recorded file sizes, SHA-256 values, provenance,
+and authorization basis.
