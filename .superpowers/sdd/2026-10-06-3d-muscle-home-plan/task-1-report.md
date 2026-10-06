@@ -26,7 +26,7 @@ dependency change was made.
 - Added focused unit tests for missing models, SHA-256 mismatch, remote paths,
   unconfirmed licenses, missing metadata, blocked APK authorization, duplicate
   genders, metadata normalization, malformed SHA-256, negative byte counts,
-  and two valid models.
+  case-insensitive SHA-256, and two valid models.
 
 ## Verification
 
@@ -39,7 +39,8 @@ dependency change was made.
 
 The offline verifier now covers the corresponding manifest checks for paths,
 metadata normalization, SHA-256 format, byte declarations, licensing, and APK
-authorization. Kotlin remains the authoritative implementation for asset-byte
+authorization, including lowercasing the manifest SHA-256 before comparing it
+to `shasum`. Kotlin remains the authoritative implementation for asset-byte
 verification. The checked-in manifest explicitly records all
 source/license/attribution/authorization values as `blocked`; it therefore
 remains a failing authorization record.

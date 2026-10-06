@@ -68,6 +68,7 @@ while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status s
     if [[ ! "$expected_sha" =~ ^[0-9A-Fa-f]{64}$ ]]; then
         echo "invalid SHA-256: $path" >>"$tmp_report"; failures=$((failures + 1))
     fi
+    normalized_expected_sha="$(printf '%s' "$expected_sha" | tr '[:upper:]' '[:lower:]')"
     file="$assets_root/$path"
     if [[ ! -f "$file" ]]; then
         echo "asset does not exist: $path" >>"$tmp_report"; failures=$((failures + 1)); continue
@@ -78,7 +79,7 @@ while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status s
     if [[ "$expected_bytes" =~ ^[0-9]+$ && "$expected_bytes" != "$actual_bytes" ]]; then
         echo "byte count mismatch: $path" >>"$tmp_report"; failures=$((failures + 1))
     fi
-    if [[ "$expected_sha" != "$actual_sha" ]]; then
+    if [[ "$normalized_expected_sha" != "$actual_sha" ]]; then
         echo "SHA-256 mismatch: $path" >>"$tmp_report"; failures=$((failures + 1))
     fi
 done < <(jq -r '.entries[] | [.gender, .assetPath, (.bytes|tostring), .sha256, .licenseStatus, .sourceUrlOrRepository, .sourceCommitOrVersion, .license, .attribution, .apkRedistributionAuthorization] | @tsv' "$manifest")

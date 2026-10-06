@@ -111,7 +111,7 @@ class BodyModelValidatorTest {
 
     @Test
     fun twoValidModelsAreAccepted() {
-        val male = entry(gender = "MALE", path = "body/male/body.glb", bytes = 3, sha256 = sha256("abc"))
+        val male = entry(gender = "MALE", path = "body/male/body.glb", bytes = 3, sha256 = sha256("abc").uppercase())
         val female = entry(gender = "FEMALE", path = "body/female/body.glb", bytes = 4, sha256 = sha256("defg"))
         val manifest = "{\"entries\":[${male.json},${female.json}]}"
 
