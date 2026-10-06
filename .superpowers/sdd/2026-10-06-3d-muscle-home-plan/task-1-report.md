@@ -25,21 +25,24 @@ dependency change was made.
   the macOS system Bash version and does not depend on network access.
 - Added focused unit tests for missing models, SHA-256 mismatch, remote paths,
   unconfirmed licenses, missing metadata, blocked APK authorization, duplicate
-  genders, and two valid models.
+  genders, metadata normalization, malformed SHA-256, negative byte counts,
+  and two valid models.
 
 ## Verification
 
 - `./gradlew :app:testDebugUnitTest --tests '*BodyModelValidatorTest'`
   — passed.
-- `tools/verify-body-models.sh` — emitted a JSON failure report and exited 14,
+- `tools/verify-body-models.sh` — emitted a JSON failure report and exited 16,
   correctly identifying both blocked metadata records, unconfirmed licenses,
-  authorization, and both missing GLB files.
+  authorization, invalid SHA-256 metadata, and both missing GLB files.
 - `git diff --check` — passed.
 
-The offline verifier now enforces the same metadata and authorization gates as
-the Kotlin validator where shell validation is practical. The checked-in
-manifest explicitly records all source/license/attribution/authorization
-values as `blocked`; it therefore remains a failing authorization record.
+The offline verifier now covers the corresponding manifest checks for paths,
+metadata normalization, SHA-256 format, byte declarations, licensing, and APK
+authorization. Kotlin remains the authoritative implementation for asset-byte
+verification. The checked-in manifest explicitly records all
+source/license/attribution/authorization values as `blocked`; it therefore
+remains a failing authorization record.
 
 The Gradle test run required access to the existing user-level Gradle wrapper
 cache outside the workspace. Existing unrelated Gradle warnings remain.

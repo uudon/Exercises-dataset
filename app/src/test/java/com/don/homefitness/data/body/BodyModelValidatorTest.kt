@@ -73,6 +73,32 @@ class BodyModelValidatorTest {
     }
 
     @Test
+    fun blockedMetadataComparisonTrimsAndIgnoresCase() {
+        val manifest = manifest(entry(sourceUrlOrRepository = "  BlOcKeD  ", bytes = 3, sha256 = sha256("abc")))
+
+        val result = BodyModelValidator().validate(manifest) { "abc".toByteArray() }
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("source URL or repository is missing or blocked") })
+    }
+
+    @Test
+    fun malformedSha256IsRejected() {
+        val result = BodyModelValidator().validate(manifest(entry(sha256 = "not-a-sha", bytes = 3))) { "abc".toByteArray() }
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("has an invalid SHA-256") })
+    }
+
+    @Test
+    fun negativeByteDeclarationIsRejected() {
+        val result = BodyModelValidator().validate(manifest(entry(bytes = -1, sha256 = sha256("abc")))) { "abc".toByteArray() }
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.any { it.contains("negative byte count") })
+    }
+
+    @Test
     fun duplicateGenderIsRejected() {
         val first = entry(gender = "MALE", bytes = 3, sha256 = sha256("abc"))
         val second = entry(gender = "MALE", path = "body/male/other.glb", bytes = 3, sha256 = sha256("abc"))
