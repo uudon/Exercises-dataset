@@ -183,6 +183,7 @@ class MuscleActionMapper(
                     validation = BodyMappingCheckReport(
                         valid = false,
                         errors = listOf("mapping resource initialization failed: ${error.message ?: "unknown error"}"),
+                        releaseAuthorizationBlocked = true,
                     ),
                 )
             }
@@ -191,7 +192,11 @@ class MuscleActionMapper(
         fun unavailable(reason: String): MuscleActionMapper = MuscleActionMapper(
             exercises = emptyList(),
             mappings = emptyList(),
-            validation = BodyMappingCheckReport(valid = false, errors = listOf(reason)),
+            validation = BodyMappingCheckReport(
+                valid = false,
+                errors = listOf(reason),
+                releaseAuthorizationBlocked = true,
+            ),
         )
     }
 

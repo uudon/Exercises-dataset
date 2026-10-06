@@ -7,6 +7,21 @@ import org.junit.Test
 
 class BodyMappingValidatorTest {
     @Test
+    fun malformedResourcesBlockReleaseAuthorization() {
+        val result = BodyMappingValidator().validate(
+            regionsJson = "not-json",
+            mappingsJson = "[]",
+            catalogExercises = emptyList(),
+            modelReport = validModelReport(),
+            modelNodeIdsByGender = emptyMap(),
+        )
+
+        assertFalse(result.valid)
+        assertTrue(result.errors.single().contains("cannot be parsed"))
+        assertTrue(result.releaseAuthorizationBlocked)
+    }
+
+    @Test
     fun rejectsDuplicateRegionIdsAndUnknownMuscleGroups() {
         val regions = listOf(region("chest"), region("chest", group = "neck"))
 

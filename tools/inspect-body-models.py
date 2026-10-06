@@ -3,6 +3,7 @@
 from __future__ import annotations
 import hashlib
 import json
+import re
 import struct
 import sys
 from pathlib import Path
@@ -111,6 +112,14 @@ def inspect_glb(data: bytes, entry: dict) -> dict:
 def blocked(value) -> bool:
     return not isinstance(value, str) or value.strip().lower() in {"", "missing", "blocked", "not supplied", "not confirmed"}
 
+def is_relative_asset_path(path) -> bool:
+    if not isinstance(path, str) or not path or path.startswith("/") or "\\" in path:
+        return False
+    segments = path.split("/")
+    if any(segment in {"", ".", ".."} for segment in segments):
+        return False
+    return re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", path) is None
+
 def main(repo: Path) -> int:
     report = {"valid": False, "runtimeValid": False, "structureValid": False, "errors": [], "modelCount": 0, "totalBytes": 0, "models": [], "licenseStatus": "blocked", "authorization": {"licenseStatus": "blocked", "apkRedistribution": "blocked", "releaseGate": "blocked"}}
     try: manifest = json.loads((repo / "app/src/main/assets/body/model-manifest.json").read_text()); entries = manifest["entries"]
@@ -119,7 +128,7 @@ def main(repo: Path) -> int:
     for entry in entries:
         gender, path = entry.get("gender"), entry.get("assetPath"); genders.append(gender)
         if gender not in {"MALE", "FEMALE"} or genders.count(gender) > 1: report["errors"].append(f"entry {gender} gender is invalid or duplicated"); technical_ok = False
-        if not isinstance(path, str) or not path or path.startswith("/") or "\\" in path or ".." in Path(path).parts or ":" in path.split("/")[0]: report["errors"].append(f"entry {gender} assetPath is not relative"); technical_ok = False; continue
+        if not is_relative_asset_path(path): report["errors"].append(f"entry {gender} assetPath is not relative"); technical_ok = False; continue
         auth_error = entry.get("licenseStatus") != "confirmed" or blocked(entry.get("sourceUrlOrRepository")) or blocked(entry.get("sourceCommitOrVersion")) or blocked(entry.get("license")) or blocked(entry.get("attribution")) or entry.get("apkRedistributionAuthorization") != "confirmed"
         if auth_error:
             authorization_ok = False

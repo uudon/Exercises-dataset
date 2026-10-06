@@ -133,7 +133,17 @@ class MuscleActionMapperTest {
         )
 
         assertTrue(mapper.initializationError?.contains("resource initialization failed") == true)
+        assertTrue(mapper.releaseAuthorizationBlocked)
         assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).primary.isEmpty())
+    }
+
+    @Test
+    fun unavailableMapperBlocksReleaseAuthorizationAndReturnsNoActions() {
+        val mapper = MuscleActionMapper.unavailable("resources unavailable")
+
+        assertTrue(mapper.releaseAuthorizationBlocked)
+        assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).primary.isEmpty())
+        assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).secondary.isEmpty())
     }
 
     @Test

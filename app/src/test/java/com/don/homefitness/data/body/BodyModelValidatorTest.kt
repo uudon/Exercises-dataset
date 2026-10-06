@@ -8,6 +8,16 @@ import org.junit.Test
 
 class BodyModelValidatorTest {
     @Test
+    fun malformedManifestIsBlockedAndRuntimeInvalid() {
+        val result = BodyModelValidator().validate("{not-json") { error("must not read assets") }
+
+        assertFalse(result.valid)
+        assertFalse(result.runtimeValid)
+        assertFalse(result.structureValid)
+        assertEquals("blocked", result.authorization.releaseGate)
+    }
+
+    @Test
     fun missingModelIsRejected() {
         val manifest = manifest(entry(bytes = 3, sha256 = sha256("abc")))
 

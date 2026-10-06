@@ -18,6 +18,12 @@ class BodyModelValidator {
                 totalBytes = 0,
                 runtimeValid = false,
                 structureValid = false,
+                licenseStatus = "blocked",
+                authorization = BodyModelAuthorization(
+                    licenseStatus = "blocked",
+                    apkRedistribution = "blocked",
+                    releaseGate = "blocked",
+                ),
             )
         }
         val errors = mutableListOf<String>()
@@ -168,7 +174,7 @@ class BodyModelValidator {
 
     private fun isRelativeAssetPath(path: String): Boolean =
         path.isNotBlank() && !path.startsWith('/') && !path.contains('\\') &&
-            !path.split('/').any { it == ".." || it.isBlank() } && !SCHEME_PATTERN.containsMatchIn(path)
+            !path.split('/').any { it == "." || it == ".." || it.isBlank() } && !SCHEME_PATTERN.containsMatchIn(path)
 
     private fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256")
         .digest(bytes).joinToString("") { "%02x".format(it) }

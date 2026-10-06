@@ -97,7 +97,11 @@ class BodyMappingValidator(
             modelNodeIdsByGender = modelNodeIdsByGender,
         )
     } catch (error: Exception) {
-        BodyMappingCheckReport(false, listOf("mapping resource cannot be parsed: ${error.message ?: "unknown error"}"))
+        BodyMappingCheckReport(
+            valid = false,
+            errors = listOf("mapping resource cannot be parsed: ${error.message ?: "unknown error"}"),
+            releaseAuthorizationBlocked = true,
+        )
     }
 
     private fun validateExerciseIds(
