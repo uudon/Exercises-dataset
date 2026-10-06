@@ -5,6 +5,7 @@ import com.don.homefitness.data.body.BodyGender
 import com.don.homefitness.data.body.BodyMappingCheckReport
 import com.don.homefitness.data.body.BodyMappingValidator
 import com.don.homefitness.data.body.BodyModelCheckReport
+import com.don.homefitness.data.body.BodyModelValidator
 import com.don.homefitness.data.body.MuscleActionMapping
 import com.don.homefitness.data.body.MuscleRegion
 import com.don.homefitness.data.catalog.CatalogExercise
@@ -115,38 +116,48 @@ class MuscleActionMapper(
             modelCheckReportJson: String,
             catalogExercises: List<CatalogExercise>,
             modelNodeIdsByGender: Map<BodyGender, Set<String>>,
+            actualModelReport: BodyModelCheckReport? = null,
         ): MuscleActionMapper {
             return try {
                 val json = Json { ignoreUnknownKeys = true }
                 val regions = json.decodeFromString<List<MuscleRegion>>(regionsJson)
                 val mappings = json.decodeFromString<List<MuscleActionMapping>>(mappingsJson)
                 val report = json.decodeFromString<ModelCheckReportResource>(modelCheckReportJson)
+                val parsedModelReport = BodyModelCheckReport(
+                    valid = report.valid,
+                    errors = report.errors,
+                    modelCount = report.modelCount,
+                    totalBytes = report.totalBytes,
+                    runtimeValid = report.runtimeValid,
+                    structureValid = report.structureValid,
+                    models = report.models.map { model ->
+                        com.don.homefitness.data.body.BodyModelMetrics(
+                            gender = model.gender,
+                            assetPath = model.assetPath,
+                            bytes = model.bytes,
+                            meshes = model.meshes,
+                            materials = model.materials,
+                            triangles = model.triangles,
+                            selectableMeshes = model.selectableMeshes,
+                            requiredRegions = model.requiredRegions,
+                            nodeNames = model.nodeNames,
+                        )
+                    },
+                    licenseStatus = report.licenseStatus,
+                )
+                val reportErrors = actualModelReport?.let {
+                    BodyModelValidator().validateReportIntegrity(it, parsedModelReport)
+                }.orEmpty()
+                val modelReport = if (reportErrors.isEmpty()) parsedModelReport else parsedModelReport.copy(
+                    runtimeValid = false,
+                    structureValid = false,
+                    errors = parsedModelReport.errors + reportErrors,
+                )
                 val validation = BodyMappingValidator().validate(
                     regions = regions,
                     mappings = mappings,
                     catalogExercises = catalogExercises,
-                    modelReport = BodyModelCheckReport(
-                        valid = report.valid,
-                        errors = report.errors,
-                        modelCount = report.modelCount,
-                        totalBytes = report.totalBytes,
-                        runtimeValid = report.runtimeValid,
-                        structureValid = report.structureValid,
-                        models = report.models.map { model ->
-                            com.don.homefitness.data.body.BodyModelMetrics(
-                                gender = model.gender,
-                                assetPath = model.assetPath,
-                                bytes = model.bytes,
-                                meshes = model.meshes,
-                                materials = model.materials,
-                                triangles = model.triangles,
-                                selectableMeshes = model.selectableMeshes,
-                                requiredRegions = model.requiredRegions,
-                                nodeNames = model.nodeNames,
-                            )
-                        },
-                        licenseStatus = report.licenseStatus,
-                    ),
+                    modelReport = modelReport,
                     modelNodeIdsByGender = modelNodeIdsByGender,
                 )
                 MuscleActionMapper(catalogExercises, mappings, validation)
@@ -174,13 +185,13 @@ class MuscleActionMapper(
 @Serializable
 private data class ModelCheckReportResource(
     val valid: Boolean,
-    val runtimeValid: Boolean = true,
-    val structureValid: Boolean = true,
-    val errors: List<String> = emptyList(),
-    val modelCount: Int = 0,
-    val totalBytes: Long = 0L,
-    val models: List<ModelMetricsResource> = emptyList(),
-    val licenseStatus: String = "unknown",
+    val runtimeValid: Boolean,
+    val structureValid: Boolean,
+    val errors: List<String>,
+    val modelCount: Int,
+    val totalBytes: Long,
+    val models: List<ModelMetricsResource>,
+    val licenseStatus: String,
 )
 
 @Serializable
@@ -193,5 +204,5 @@ private data class ModelMetricsResource(
     val triangles: Int,
     val selectableMeshes: Int,
     val requiredRegions: List<String>,
-    val nodeNames: List<String> = emptyList(),
+    val nodeNames: List<String>,
 )

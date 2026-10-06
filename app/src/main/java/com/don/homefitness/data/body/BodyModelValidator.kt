@@ -94,6 +94,37 @@ class BodyModelValidator {
         )
     }
 
+    fun validateReportIntegrity(
+        expected: BodyModelCheckReport,
+        reported: BodyModelCheckReport,
+    ): List<String> = buildList {
+        if (reported.runtimeValid != expected.runtimeValid) {
+            add("model-check-report runtimeValid does not match packaged assets")
+        }
+        if (reported.structureValid != expected.structureValid) {
+            add("model-check-report structureValid does not match packaged assets")
+        }
+        if (reported.modelCount != expected.modelCount) {
+            add("model-check-report modelCount does not match packaged manifest")
+        }
+        if (reported.totalBytes != expected.totalBytes) {
+            add("model-check-report totalBytes does not match packaged assets")
+        }
+        expected.models.sortedBy { it.gender }.zip(reported.models.sortedBy { it.gender }).forEach { (actual, sidecar) ->
+            if (actual.gender != sidecar.gender || actual.assetPath != sidecar.assetPath ||
+                actual.bytes != sidecar.bytes || actual.meshes != sidecar.meshes ||
+                actual.materials != sidecar.materials || actual.triangles != sidecar.triangles ||
+                actual.selectableMeshes != sidecar.selectableMeshes ||
+                actual.requiredRegions != sidecar.requiredRegions || actual.nodeNames != sidecar.nodeNames
+            ) {
+                add("model-check-report metrics do not match packaged ${actual.gender} GLB")
+            }
+        }
+        if (reported.models.size != expected.models.size) {
+            add("model-check-report model metrics do not match packaged manifest")
+        }
+    }
+
     private fun validateMetadata(entry: BodyModelEntry, label: String, errors: MutableList<String>) {
         val metadata = listOf(
             "source URL or repository" to entry.sourceUrlOrRepository,

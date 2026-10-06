@@ -18,7 +18,7 @@ class MuscleProductionWiringTest {
         )
         val regionsJson = assets.resolve("body/muscle-regions.json").readText()
         val mappingsJson = assets.resolve("body/muscle-action-map.json").readText()
-        val validModelReport = """{"valid":true,"errors":[],"modelCount":2,"totalBytes":1535812}"""
+        val validModelReport = assets.resolve("body/model-check-report.json").readText()
         val modelNodes = mapOf(
             BodyGender.MALE to FileInputStream(assets.resolve("body/male/body.glb")).use(::readGlbNodeNames),
             BodyGender.FEMALE to FileInputStream(assets.resolve("body/female/body.glb")).use(::readGlbNodeNames),
@@ -30,6 +30,10 @@ class MuscleProductionWiringTest {
             modelCheckReportJson = validModelReport,
             catalogExercises = catalog,
             modelNodeIdsByGender = modelNodes,
+            actualModelReport = validatePackagedBodyModels(
+                manifestJson = assets.resolve("body/model-manifest.json").readText(),
+                assetReader = { path -> assets.resolve(path).readBytes() },
+            ),
         )
 
         val panel = mapper.panelStateFor("chest", "胸部")

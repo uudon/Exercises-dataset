@@ -4,6 +4,8 @@ import com.don.homefitness.core.model.TrainingLocation
 import com.don.homefitness.data.catalog.CatalogExercise
 import com.don.homefitness.data.body.MuscleActionMapping
 import com.don.homefitness.data.body.BodyMappingCheckReport
+import com.don.homefitness.data.body.BodyModelCheckReport
+import com.don.homefitness.data.body.BodyModelMetrics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -130,7 +132,52 @@ class MuscleActionMapperTest {
             modelNodeIdsByGender = emptyMap(),
         )
 
-        assertTrue(mapper.initializationError?.contains("coverage") == true)
+        assertTrue(mapper.initializationError?.contains("resource initialization failed") == true)
+        assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).primary.isEmpty())
+    }
+
+    @Test
+    fun staleModelReportDisablesRuntimeActions() {
+        val mapper = MuscleActionMapper.fromResources(
+            regionsJson = "[]",
+            mappingsJson = "[]",
+            modelCheckReportJson = """
+                {
+                  "valid": true,
+                  "runtimeValid": true,
+                  "structureValid": true,
+                  "errors": [],
+                  "modelCount": 2,
+                  "totalBytes": 10,
+                  "models": [],
+                  "licenseStatus": "confirmed"
+                }
+            """.trimIndent(),
+            catalogExercises = emptyList(),
+            modelNodeIdsByGender = emptyMap(),
+            actualModelReport = BodyModelCheckReport(
+                valid = true,
+                errors = emptyList(),
+                modelCount = 2,
+                totalBytes = 10,
+                runtimeValid = true,
+                structureValid = true,
+                models = listOf(
+                    BodyModelMetrics(
+                        gender = com.don.homefitness.data.body.BodyGender.MALE,
+                        assetPath = "body/male/body.glb",
+                        bytes = 5,
+                        meshes = 1,
+                        materials = 1,
+                        triangles = 1,
+                        selectableMeshes = 1,
+                        requiredRegions = listOf("abs"),
+                    ),
+                ),
+            ),
+        )
+
+        assertTrue(mapper.initializationError?.contains("metrics do not match") == true)
         assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).primary.isEmpty())
     }
 
