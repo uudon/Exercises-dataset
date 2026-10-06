@@ -20,6 +20,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +56,7 @@ fun MuscleExplorerScreen(
     val context = LocalContext.current
     val regions = remember(context) { loadMuscleRegions(context) }
     var viewportError by remember(modelRenderer) { mutableStateOf(initialModelError) }
+    var cameraResetGeneration by remember(modelRenderer) { mutableIntStateOf(0) }
 
     LaunchedEffect(state.gender) {
         viewportError = initialModelError
@@ -94,7 +97,10 @@ fun MuscleExplorerScreen(
                     modifier = Modifier.semantics { contentDescription = "切换女性模型" },
                 )
                 OutlinedButton(
-                    onClick = viewModel::resetCamera,
+                    onClick = {
+                        viewModel.resetCamera()
+                        cameraResetGeneration++
+                    },
                     modifier = Modifier.weight(1f),
                 ) { Text("恢复视角") }
             }
@@ -106,19 +112,21 @@ fun MuscleExplorerScreen(
                     .padding(horizontal = 16.dp),
             ) {
                 if (modelRenderer != null && viewportError == null) {
-                    MuscleModelViewport(
-                        renderer = modelRenderer,
-                        gender = state.gender,
-                        selectedMuscleGroupId = state.selectedMuscleGroupId,
-                        modifier = Modifier.fillMaxSize(),
-                        onRegionSelected = { muscleGroupId ->
-                            viewModel.selectMuscle(muscleGroupId)
-                            onMuscleSelected(muscleGroupId)
-                        },
-                        onCameraChanged = viewModel::updateCamera,
-                        onError = { viewportError = it },
-                        errorContent = { error -> ModelErrorContent(error) },
-                    )
+                    key(cameraResetGeneration) {
+                        MuscleModelViewport(
+                            renderer = modelRenderer,
+                            gender = state.gender,
+                            selectedMuscleGroupId = state.selectedMuscleGroupId,
+                            modifier = Modifier.fillMaxSize(),
+                            onRegionSelected = { muscleGroupId ->
+                                viewModel.selectMuscle(muscleGroupId)
+                                onMuscleSelected(muscleGroupId)
+                            },
+                            onCameraChanged = viewModel::updateCamera,
+                            onError = { viewportError = it },
+                            errorContent = { error -> ModelErrorContent(error) },
+                        )
+                    }
                 } else {
                     ModelErrorContent(viewportError ?: "模型暂不可用")
                 }
