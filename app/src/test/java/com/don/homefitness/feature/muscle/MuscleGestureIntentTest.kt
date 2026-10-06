@@ -27,4 +27,17 @@ class MuscleGestureIntentTest {
             classifyGesture(10f, 10f, 13f, 14f, scaleDelta = 0f, tapSlopPx = 8f),
         )
     }
+
+    @Test
+    fun bridgeRejectsSelectionAfterScrollAndScale() {
+        val bridge = GestureIntentBridge(tapSlopPx = 8f)
+
+        bridge.onDown(10f, 10f)
+        bridge.onMove(20f, 10f)
+        assertEquals(false, bridge.canSelect(20f, 10f))
+
+        bridge.onDown(10f, 10f)
+        bridge.onScale(0.2f)
+        assertEquals(false, bridge.canSelect(10f, 10f))
+    }
 }

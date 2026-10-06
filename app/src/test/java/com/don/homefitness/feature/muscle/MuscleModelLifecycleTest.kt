@@ -1,6 +1,8 @@
 package com.don.homefitness.feature.muscle
 
 import com.don.homefitness.data.body.BodyGender
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -36,6 +38,7 @@ class MuscleModelLifecycleTest {
     fun rendererRejectsRemoteModelPathsInsteadOfFallingBackToNetwork() {
         val renderer = LocalGlbMuscleModelRenderer(
             assetPathByGender = mapOf(BodyGender.MALE to "https://example.invalid/body.glb"),
+            regionMap = testRegionMap(),
         )
 
         val error = runCatching { renderer.load(BodyGender.MALE) }.exceptionOrNull()
@@ -61,18 +64,37 @@ class MuscleModelLifecycleTest {
         val backend = RecordingBackend()
         val renderer = LocalGlbMuscleModelRenderer(
             assetPathByGender = mapOf(BodyGender.MALE to "body/male/body.glb"),
+            regionMap = testRegionMap(),
             backend = backend,
-            regionIdToMuscleGroupId = mapOf("torso.region" to "chest"),
         )
         var nodeId: String? = null
         var muscleGroupId: String? = null
         renderer.onNodeHit = { nodeId = it }
         renderer.onRegionHit = { muscleGroupId = it }
 
-        backend.emitHit("torso_node", "torso.region")
+        backend.emitHit("torso", "back")
 
-        assertEquals("torso_node", nodeId)
-        assertEquals("chest", muscleGroupId)
+        assertEquals("torso", nodeId)
+        assertEquals("back", muscleGroupId)
+    }
+
+    @Test
+    fun resourceMapValidatesBothGenderNodeSets() {
+        val map = testRegionMap()
+
+        assertEquals("chest", map.regionIdForNode(BodyGender.MALE, "chest_left"))
+        assertEquals("chest", map.regionIdForNode(BodyGender.FEMALE, "sports_bra_left"))
+        assertEquals("chest", map.muscleGroupIdFor("chest"))
+    }
+
+    @Test
+    fun resourceMapRejectsMissingGenderNodeSet() {
+        val resource = java.io.File("src/main/assets/body/muscle-regions.json").readText()
+            .replace("\"FEMALE\":[\"chest_left\",\"chest_right\",\"sports_bra_left\",\"sports_bra_right\"]", "\"FEMALE\":[]")
+
+        val error = runCatching { ValidatedMuscleRegionMap.fromJson(resource) }.exceptionOrNull()
+
+        assertTrue(error is IllegalArgumentException)
     }
 
     @Test
@@ -123,7 +145,7 @@ class MuscleModelLifecycleTest {
     private class RecordingBackend : SceneViewFilamentBackend {
         private var nodeListener: (String) -> Unit = {}
         private var regionListener: (String) -> Unit = {}
-        override fun loadLocalGlb(assetPath: String) = Unit
+        override fun loadLocalGlb(assetPath: String, gender: BodyGender, nodeToRegion: Map<String, String>) = Unit
         override fun setHighlight(muscleGroupId: String?) = Unit
         override fun resetCamera() = Unit
         override fun restoreCamera(camera: CameraOrbit) = Unit
@@ -133,9 +155,15 @@ class MuscleModelLifecycleTest {
         override fun setNodeHitListener(listener: (String) -> Unit) { nodeListener = listener }
         override fun setRegionHitListener(listener: (String) -> Unit) { regionListener = listener }
         override fun setCameraListener(listener: (CameraOrbit) -> Unit) = Unit
+        @Composable
+        override fun Content(modifier: Modifier) = Unit
         fun emitHit(nodeId: String, regionId: String) {
             nodeListener(nodeId)
             regionListener(regionId)
         }
     }
+
+    private fun testRegionMap(): ValidatedMuscleRegionMap = ValidatedMuscleRegionMap.fromJson(
+        java.io.File("src/main/assets/body/muscle-regions.json").readText(),
+    )
 }
