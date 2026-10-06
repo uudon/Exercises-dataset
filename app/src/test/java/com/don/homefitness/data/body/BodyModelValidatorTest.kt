@@ -111,21 +111,21 @@ class BodyModelValidatorTest {
 
     @Test
     fun twoValidModelsAreAccepted() {
-        val male = entry(gender = "MALE", path = "body/male/body.glb", bytes = 3, sha256 = sha256("abc").uppercase())
-        val female = entry(gender = "FEMALE", path = "body/female/body.glb", bytes = 4, sha256 = sha256("defg"))
+        val model = minimalGlb()
+        val male = entry(gender = "MALE", path = "body/male/body.glb", bytes = model.size, sha256 = sha256(model))
+        val female = entry(gender = "FEMALE", path = "body/female/body.glb", bytes = model.size, sha256 = sha256(model))
         val manifest = "{\"entries\":[${male.json},${female.json}]}"
 
         val result = BodyModelValidator().validate(manifest) { path ->
             when (path) {
-                "body/male/body.glb" -> "abc".toByteArray()
-                "body/female/body.glb" -> "defg".toByteArray()
+                "body/male/body.glb", "body/female/body.glb" -> model
                 else -> error("unexpected path: $path")
             }
         }
 
         assertTrue(result.valid)
         assertEquals(2, result.modelCount)
-        assertEquals(7, result.totalBytes)
+        assertEquals(model.size.toLong() * 2, result.totalBytes)
         assertTrue(result.errors.isEmpty())
     }
 
@@ -148,9 +148,28 @@ class BodyModelValidatorTest {
 
     private data class TestEntry(val json: String)
 
+    private fun minimalGlb(): ByteArray {
+        val json = "{\"asset\":{\"version\":\"2.0\"},\"nodes\":[],\"meshes\":[],\"materials\":[],\"accessors\":[]}"
+            .toByteArray()
+        val paddedJson = json + ByteArray((4 - json.size % 4) % 4) { 0x20 }
+        val length = 12 + 8 + paddedJson.size
+        return java.nio.ByteBuffer.allocate(length).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+            .putInt(0x46546C67)
+            .putInt(2)
+            .putInt(length)
+            .putInt(paddedJson.size)
+            .putInt(0x4E4F534A)
+            .put(paddedJson)
+            .array()
+    }
+
     private companion object {
         fun sha256(value: String): String = MessageDigest.getInstance("SHA-256")
             .digest(value.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+
+        fun sha256(value: ByteArray): String = MessageDigest.getInstance("SHA-256")
+            .digest(value)
             .joinToString("") { "%02x".format(it) }
     }
 }

@@ -15,6 +15,7 @@ fi
 tmp_report="$(mktemp)"
 trap 'rm -f "$tmp_report"' EXIT
 failures=0
+structure_failures=0
 total_bytes=0
 model_count="$(jq '.entries | length' "$manifest")"
 male_seen=0
@@ -93,13 +94,13 @@ while IFS=$'\t' read -r gender path expected_bytes expected_sha license_status s
     stats_file_name="$(printf '%s' "$gender" | tr '[:upper:]' '[:lower:]').glb"
     stats_row="$(jq -c --arg file "$stats_file_name" '.[] | select(.file == $file)' "$stats_file" 2>/dev/null || true)"
     if [[ -z "$stats_row" ]]; then
-        echo "generated stats missing: $stats_file_name" >>"$tmp_report"; failures=$((failures + 1))
+        echo "generated stats missing: $stats_file_name" >>"$tmp_report"; failures=$((failures + 1)); structure_failures=$((structure_failures + 1))
     else
         stats_bytes="$(jq -r '.bytes' <<<"$stats_row")"
         if [[ "$stats_bytes" != "$actual_bytes" ]]; then
-            echo "generated stats byte count mismatch: $stats_file_name" >>"$tmp_report"; failures=$((failures + 1))
+            echo "generated stats byte count mismatch: $stats_file_name" >>"$tmp_report"; failures=$((failures + 1)); structure_failures=$((structure_failures + 1))
         fi
-        model_reports="$(jq -c --arg gender "$gender" --arg path "$path" --argjson stats "$stats_row" '. + [{gender:$gender,assetPath:$path,bytes:$stats.bytes,meshes:$stats.meshes,triangles:$stats.triangles,selectableMeshes:$stats.selectableMeshes,requiredRegions:$stats.requiredRegions}]' <<<"$model_reports")"
+        model_reports="$(jq -c --arg gender "$gender" --arg path "$path" --argjson stats "$stats_row" '. + [{gender:$gender,assetPath:$path,bytes:$stats.bytes,meshes:$stats.meshes,materials:($stats.materials // $stats.meshes),triangles:$stats.triangles,selectableMeshes:$stats.selectableMeshes,requiredRegions:$stats.requiredRegions}]' <<<"$model_reports")"
     fi
 done < <(jq -r '.entries[] | [.gender, .assetPath, (.bytes|tostring), .sha256, .licenseStatus, .sourceUrlOrRepository, .sourceCommitOrVersion, .license, .attribution, .apkRedistributionAuthorization] | @tsv' "$manifest")
 
@@ -107,13 +108,13 @@ if [[ "$male_seen" -eq 0 ]]; then echo "missing gender: MALE" >>"$tmp_report"; f
 if [[ "$female_seen" -eq 0 ]]; then echo "missing gender: FEMALE" >>"$tmp_report"; failures=$((failures + 1)); fi
 
 if [[ "$failures" -eq 0 ]]; then
-    jq -n --argjson count "$model_count" --argjson bytes "$total_bytes" \
+    jq -n --argjson count "$model_count" --argjson bytes "$total_bytes" --argjson runtime_valid "$([[ "$structure_failures" -eq 0 ]] && echo true || echo false)" \
         --argjson models "$model_reports" \
-        '{valid:true, errors:[], modelCount:$count, totalBytes:$bytes, models:$models}'
+        '{valid:true, runtimeValid:$runtime_valid, structureValid:$runtime_valid, errors:[], modelCount:$count, totalBytes:$bytes, models:$models}'
 else
-    jq -n --argjson count "$model_count" --argjson bytes "$total_bytes" \
+    jq -n --argjson count "$model_count" --argjson bytes "$total_bytes" --argjson runtime_valid "$([[ "$structure_failures" -eq 0 ]] && echo true || echo false)" \
         --argjson models "$model_reports" \
         --rawfile error_text "$tmp_report" \
-        '{valid:false, errors:($error_text | split("\n") | map(select(length > 0))), modelCount:$count, totalBytes:$bytes, models:$models}'
+        '{valid:false, runtimeValid:$runtime_valid, structureValid:$runtime_valid, errors:($error_text | split("\n") | map(select(length > 0))), modelCount:$count, totalBytes:$bytes, models:$models, licenseStatus:"blocked"}'
 fi
 exit "$failures"

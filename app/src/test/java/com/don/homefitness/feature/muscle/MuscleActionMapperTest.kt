@@ -3,6 +3,7 @@ package com.don.homefitness.feature.muscle
 import com.don.homefitness.core.model.TrainingLocation
 import com.don.homefitness.data.catalog.CatalogExercise
 import com.don.homefitness.data.body.MuscleActionMapping
+import com.don.homefitness.data.body.BodyMappingCheckReport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -11,6 +12,40 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MuscleActionMapperTest {
+    @Test
+    fun authorizationBlockedDoesNotEraseTechnicallyValidActions() {
+        val mapper = MuscleActionMapper(
+            exercises = listOf(exercise("0001", "pectorals", equipment = "body weight")),
+            mappings = listOf(MuscleActionMapping("chest", listOf("0001"), emptyList())),
+            validation = BodyMappingCheckReport(
+                valid = true,
+                errors = emptyList(),
+                releaseAuthorizationBlocked = true,
+            ),
+        )
+
+        val result = mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight"))
+
+        assertEquals(listOf("0001"), result.primary.map(CatalogExercise::id))
+        assertTrue(mapper.releaseAuthorizationBlocked)
+        assertEquals(null, mapper.initializationError)
+    }
+
+    @Test
+    fun malformedModelStillDisablesActions() {
+        val mapper = MuscleActionMapper(
+            exercises = listOf(exercise("0001", "pectorals", equipment = "body weight")),
+            mappings = listOf(MuscleActionMapping("chest", listOf("0001"), emptyList())),
+            validation = BodyMappingCheckReport(
+                valid = false,
+                errors = listOf("model-check-report structure is not runtime-valid"),
+            ),
+        )
+
+        assertTrue(mapper.actionsFor("chest", TrainingLocation.HOME, setOf("body weight")).primary.isEmpty())
+        assertTrue(mapper.initializationError?.contains("runtime-valid") == true)
+    }
+
     @Test
     fun returnsHomeBodyweightAndDumbbellActionsWithPrimaryFirst() {
         val exercises = listOf(

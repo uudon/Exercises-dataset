@@ -4,6 +4,7 @@
     "bytes": 730028,
     "triangles": 28928,
     "meshes": 36,
+    "materials": 36,
     "selectableMeshes": 20,
     "requiredRegions": [
       "abs",
@@ -24,6 +25,7 @@
     "bytes": 805784,
     "triangles": 31872,
     "meshes": 41,
+    "materials": 41,
     "selectableMeshes": 22,
     "requiredRegions": [
       "abs",

@@ -56,6 +56,11 @@ tasks.register<Exec>("verifyOfflineContract") {
     commandLine("bash", "tools/verify-offline-contract.sh")
 }
 
+tasks.register<Exec>("verifyBodyModels") {
+    workingDir(rootProject.projectDir)
+    commandLine("bash", "tools/verify-body-models.sh")
+}
+
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
 

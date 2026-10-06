@@ -13,7 +13,7 @@ Date: 2026-10-07
 | Lint | PASSED | `./gradlew :app:lintDebug` — `BUILD SUCCESSFUL` |
 | Media resources | PASSED | `./gradlew :app:verifyMediaResources` — 1,324 mappings, local files and SHA-256 verified |
 | Offline contract | PASSED | `./gradlew :app:verifyOfflineContract` — local-only contract passed |
-| Body models | BLOCKED | `./gradlew :app:verifyBodyModels` — Gradle task failed; underlying `tools/verify-body-models.sh` exit 8; both entries lack confirmed formal license/source and APK redistribution authorization |
+| Body models | BLOCKED RELEASE / TECHNICALLY VALID | `./gradlew :app:verifyBodyModels` — expected exit 8 for authorization; report records `runtimeValid=true`, `structureValid=true`, actual GLB metrics, and `licenseStatus=blocked` |
 | Diff whitespace | PASSED | `git diff --check` |
 | Connected Android test | NOT RUN | `adb devices -l` returned no attached devices/emulators |
 
@@ -31,6 +31,10 @@ Date: 2026-10-07
 | Total | 1,535,812 | 77 | 60,800 | 42 |
 
 Source: `GLB/fitness_human_glb/stats.json`, cross-checked by `tools/verify-body-models.sh` and recorded in `app/src/main/assets/body/model-check-report.json`.
+
+The mapping validator treats this as technically usable model structure with
+release authorization blocked; valid action mappings are not erased solely by
+the release gate. Malformed or missing GLB structure still disables actions.
 
 ## Explicit non-results
 

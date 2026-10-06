@@ -38,10 +38,11 @@ formal external authorization or metadata was invented.
 ## Model review
 
 Both files are technically valid glTF 2.0 GLB containers and have the
-expected package sizes. The models expose generic selectable `upper_arm` and
-`thigh` regions. They do not provide independent biceps, triceps, quadriceps,
-or hamstring nodes, so they cannot yet support the plan's required explicit
-muscle-level hit mapping for those groups.
+expected package sizes. The regenerated male and female GLBs expose the
+required 11 logical regions with independent selectable nodes, including
+separate biceps/triceps and quadriceps/hamstrings geometry. Their runtime
+structure and recorded mesh/material/triangle metrics are valid; release
+authorization remains a separate blocked gate.
 
 ## Verification
 
@@ -53,8 +54,9 @@ muscle-level hit mapping for those groups.
   license status, and blocked APK redistribution authorization for both models.
 - `git diff --check` — passed.
 
-The model verifier covers manifest and byte-integrity checks; it does not
-establish muscle-node granularity or device rendering compatibility.
+The model verifier covers manifest and byte integrity plus GLB header/chunk,
+node, mesh, material, triangle, selectable-mesh, and required-region checks;
+it does not establish device rendering compatibility or release authorization.
 
 The Gradle test run required access to the existing user-level Gradle wrapper
 cache outside the workspace. Existing unrelated Gradle warnings remain.

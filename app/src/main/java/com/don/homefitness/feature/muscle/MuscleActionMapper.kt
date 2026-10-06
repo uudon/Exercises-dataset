@@ -36,6 +36,7 @@ class MuscleActionMapper(
     private val validation: BodyMappingCheckReport = BodyMappingCheckReport(true, emptyList()),
 ) {
     val initializationError: String? = validation.errors.takeIf { !validation.valid }?.joinToString("; ")
+    val releaseAuthorizationBlocked: Boolean = validation.releaseAuthorizationBlocked
 
     fun actionsFor(
         muscleGroupId: String,
@@ -129,6 +130,22 @@ class MuscleActionMapper(
                         errors = report.errors,
                         modelCount = report.modelCount,
                         totalBytes = report.totalBytes,
+                        runtimeValid = report.runtimeValid,
+                        structureValid = report.structureValid,
+                        models = report.models.map { model ->
+                            com.don.homefitness.data.body.BodyModelMetrics(
+                                gender = model.gender,
+                                assetPath = model.assetPath,
+                                bytes = model.bytes,
+                                meshes = model.meshes,
+                                materials = model.materials,
+                                triangles = model.triangles,
+                                selectableMeshes = model.selectableMeshes,
+                                requiredRegions = model.requiredRegions,
+                                nodeNames = model.nodeNames,
+                            )
+                        },
+                        licenseStatus = report.licenseStatus,
                     ),
                     modelNodeIdsByGender = modelNodeIdsByGender,
                 )
@@ -157,7 +174,24 @@ class MuscleActionMapper(
 @Serializable
 private data class ModelCheckReportResource(
     val valid: Boolean,
+    val runtimeValid: Boolean = true,
+    val structureValid: Boolean = true,
     val errors: List<String> = emptyList(),
     val modelCount: Int = 0,
     val totalBytes: Long = 0L,
+    val models: List<ModelMetricsResource> = emptyList(),
+    val licenseStatus: String = "unknown",
+)
+
+@Serializable
+private data class ModelMetricsResource(
+    val gender: BodyGender,
+    val assetPath: String,
+    val bytes: Long,
+    val meshes: Int,
+    val materials: Int = 0,
+    val triangles: Int,
+    val selectableMeshes: Int,
+    val requiredRegions: List<String>,
+    val nodeNames: List<String> = emptyList(),
 )

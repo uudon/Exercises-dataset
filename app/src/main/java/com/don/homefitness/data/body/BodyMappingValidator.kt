@@ -25,7 +25,9 @@ class BodyMappingValidator(
         regionGroups.groupingBy { it }.eachCount().filterValues { it > 1 }.keys.forEach {
             errors += "more than one region maps to muscleGroupId: $it"
         }
-        if (!modelReport.valid) errors += "model-check-report is not valid: ${modelReport.errors.joinToString()}"
+        if (!modelReport.runtimeValid || !modelReport.structureValid) {
+            errors += "model-check-report structure is not runtime-valid: ${modelReport.errors.joinToString()}"
+        }
 
         regions.forEach { region ->
             if (region.muscleGroupId !in CANONICAL_MUSCLE_GROUP_IDS) {
@@ -68,7 +70,12 @@ class BodyMappingValidator(
             validateExerciseIds(mapping.muscleGroupId, mapping.secondaryExerciseIds, catalogById, errors, primaryRole = false)
         }
 
-        return BodyMappingCheckReport(errors.isEmpty(), errors)
+        return BodyMappingCheckReport(
+            valid = errors.isEmpty(),
+            errors = errors,
+            releaseAuthorizationBlocked = modelReport.licenseStatus != "confirmed" ||
+                (!modelReport.valid && modelReport.runtimeValid && modelReport.structureValid),
+        )
     }
 
     fun validate(

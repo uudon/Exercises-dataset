@@ -11,7 +11,8 @@ The verification change is scoped to the authorized files. The offline validator
 - Local-only media/model paths: PASSED by `verifyOfflineContract`.
 - Remote fallback or network media dependency: no production marker or network media dependency found by the validator.
 - Body manifest relative paths, checksums, byte counts, gender uniqueness: PASSED by static checks; formal authorization remains BLOCKED.
-- Generated model stats: PASSED; 2 models, 1,535,812 bytes, 77 meshes, 60,800 triangles, 42 selectable meshes.
+- Generated model stats and runtime structure: PASSED; 2 regenerated 11-region models, 1,535,812 bytes, 77 meshes, 60,800 triangles, 42 selectable meshes. Release authorization remains separately BLOCKED.
+- Action mapping behavior: PASSED; technically valid mappings remain available while `releaseAuthorizationBlocked` is exposed separately; malformed/missing model structure disables actions.
 - API 26 compatibility: NOT RUN; no API 26 device evidence.
 - Lifecycle pause/dispose/return/rotation/process recreation: NOT RUN manually; existing unit tests do not replace device evidence.
 - Frame-rate/PSS/loading performance: NOT RUN; no device/emulator.

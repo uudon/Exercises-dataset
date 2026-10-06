@@ -1,9 +1,16 @@
 {
   "valid": false,
+  "runtimeValid": true,
+  "structureValid": true,
   "errors": [
-    "model manifest licenseStatus is unconfirmed for MALE and FEMALE",
-    "APK redistribution authorization is blocked for MALE and FEMALE",
-    "formal source URL, source version, and independent APK distribution evidence are not supplied"
+    "licenseStatus is not confirmed: MALE",
+    "source URL or repository is missing or blocked: MALE",
+    "source commit or version is missing or blocked: MALE",
+    "APK redistribution authorization is not confirmed: MALE",
+    "licenseStatus is not confirmed: FEMALE",
+    "source URL or repository is missing or blocked: FEMALE",
+    "source commit or version is missing or blocked: FEMALE",
+    "APK redistribution authorization is not confirmed: FEMALE"
   ],
   "modelCount": 2,
   "totalBytes": 1535812,
@@ -13,6 +20,7 @@
       "assetPath": "body/male/body.glb",
       "bytes": 730028,
       "meshes": 36,
+      "materials": 36,
       "triangles": 28928,
       "selectableMeshes": 20,
       "requiredRegions": ["abs", "back", "biceps", "calves", "chest", "forearms", "glutes", "hamstrings", "quadriceps", "shoulders", "triceps"]
@@ -22,6 +30,7 @@
       "assetPath": "body/female/body.glb",
       "bytes": 805784,
       "meshes": 41,
+      "materials": 41,
       "triangles": 31872,
       "selectableMeshes": 22,
       "requiredRegions": ["abs", "back", "biceps", "calves", "chest", "forearms", "glutes", "hamstrings", "quadriceps", "shoulders", "triceps"]

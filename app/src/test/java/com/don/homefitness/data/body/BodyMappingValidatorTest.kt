@@ -26,8 +26,10 @@ class BodyMappingValidatorTest {
     @Test
     fun rejectsMissingFemaleMeshNode() {
         val result = BodyMappingValidator().validate(
-            regions = listOf(region("chest")),
-            mappings = listOf(mapping("chest", primary = listOf("0001"))),
+            regions = canonicalRegions(),
+            mappings = BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.map {
+                mapping(it, primary = if (it == "chest") listOf("0001") else emptyList())
+            },
             catalogExercises = listOf(exercise("0001", target = "pectorals")),
             modelReport = validModelReport(),
             modelNodeIdsByGender = mapOf(
@@ -50,7 +52,7 @@ class BodyMappingValidatorTest {
                 exercise("0003", target = "triceps", secondary = listOf("shoulders")),
             ),
             modelReport = validModelReport(),
-            modelNodeIdsByGender = nodesFor("chest"),
+            modelNodeIdsByGender = nodesFor(*BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.toTypedArray()),
         )
 
         assertFalse(result.valid)
@@ -74,22 +76,50 @@ class BodyMappingValidatorTest {
     }
 
     @Test
-    fun rejectsUnresolvedModelReportEvenWhenMappingsAreOtherwiseValid() {
+    fun keepsMappingTechnicallyValidWhenReleaseAuthorizationIsBlocked() {
         val result = BodyMappingValidator().validate(
-            regions = listOf(region("chest")),
-            mappings = listOf(mapping("chest", primary = listOf("0001"))),
+            regions = canonicalRegions(),
+            mappings = BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.map {
+                mapping(it, primary = if (it == "chest") listOf("0001") else emptyList())
+            },
             catalogExercises = listOf(exercise("0001", target = "pectorals")),
             modelReport = BodyModelCheckReport(
                 valid = false,
                 errors = listOf("licenseStatus is unconfirmed"),
                 modelCount = 2,
                 totalBytes = 10,
+                runtimeValid = true,
+                structureValid = true,
+                licenseStatus = "blocked",
+            ),
+            modelNodeIdsByGender = nodesFor(*BodyMappingValidator.CANONICAL_MUSCLE_GROUP_IDS.toTypedArray()),
+        )
+
+        assertTrue(result.valid)
+        assertTrue(result.releaseAuthorizationBlocked)
+    }
+
+    @Test
+    fun rejectsMalformedModelStructureEvenWhenAuthorizationIsPresent() {
+        val result = BodyMappingValidator().validate(
+            regions = listOf(region("chest")),
+            mappings = listOf(mapping("chest", primary = listOf("0001"))),
+            catalogExercises = listOf(exercise("0001", target = "pectorals")),
+            modelReport = BodyModelCheckReport(
+                valid = true,
+                errors = listOf("GLB structure is invalid"),
+                modelCount = 2,
+                totalBytes = 10,
+                runtimeValid = false,
+                structureValid = false,
+                licenseStatus = "confirmed",
             ),
             modelNodeIdsByGender = nodesFor("chest"),
         )
 
         assertFalse(result.valid)
-        assertTrue(result.errors.any { it.contains("model-check-report") })
+        assertFalse(result.releaseAuthorizationBlocked)
+        assertTrue(result.errors.any { it.contains("structure") })
     }
 
     @Test

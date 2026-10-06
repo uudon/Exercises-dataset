@@ -12,4 +12,5 @@ data class MuscleActionMapping(
 data class BodyMappingCheckReport(
     val valid: Boolean,
     val errors: List<String>,
+    val releaseAuthorizationBlocked: Boolean = false,
 )

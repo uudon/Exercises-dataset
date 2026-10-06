@@ -11,9 +11,18 @@ class BodyModelValidator {
         val manifest = try {
             json.decodeFromString<BodyModelManifest>(manifestJson)
         } catch (error: SerializationException) {
-            return BodyModelCheckReport(false, listOf("manifest JSON is invalid: ${error.message ?: "parse error"}"), 0, 0)
+            return BodyModelCheckReport(
+                valid = false,
+                errors = listOf("manifest JSON is invalid: ${error.message ?: "parse error"}"),
+                modelCount = 0,
+                totalBytes = 0,
+                runtimeValid = false,
+                structureValid = false,
+            )
         }
         val errors = mutableListOf<String>()
+        val modelReports = mutableListOf<BodyModelMetrics>()
+        var structureValid = true
         val genders = manifest.entries.groupingBy(BodyModelEntry::gender).eachCount()
         genders.filterValues { it > 1 }.keys.forEach { errors += "$it model is not unique" }
         BodyGender.entries.filterNot(genders::containsKey).forEach { errors += "$it model is missing" }
@@ -37,8 +46,27 @@ class BodyModelValidator {
             totalBytes += bytes.size.toLong()
             if (bytes.size.toLong() != entry.bytes) errors += "$label byte count mismatch: expected ${entry.bytes}, got ${bytes.size}"
             if (sha256(bytes) != entry.sha256.lowercase()) errors += "$label SHA-256 mismatch"
+            val inspection = GlbModelInspector.inspect(bytes, entry)
+            modelReports += inspection.metrics
+            if (inspection.errors.isNotEmpty()) {
+                structureValid = false
+                errors += inspection.errors.map { "$label $it" }
+            }
         }
-        return BodyModelCheckReport(errors.isEmpty(), errors, manifest.entries.size, totalBytes)
+        val releaseAuthorizationBlocked = errors.any {
+            it.contains("licenseStatus") || it.contains("authorization") || it.contains("source URL") ||
+                it.contains("source commit") || it.contains("license is") || it.contains("attribution")
+        }
+        return BodyModelCheckReport(
+            valid = errors.isEmpty(),
+            errors = errors,
+            modelCount = manifest.entries.size,
+            totalBytes = totalBytes,
+            runtimeValid = structureValid,
+            structureValid = structureValid,
+            models = modelReports,
+            licenseStatus = if (releaseAuthorizationBlocked) "blocked" else "confirmed",
+        )
     }
 
     private fun validateMetadata(entry: BodyModelEntry, label: String, errors: MutableList<String>) {
