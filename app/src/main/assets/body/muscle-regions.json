@@ -1,0 +1,13 @@
+[
+  {"regionId":"chest","muscleGroupId":"chest","displayNameZh":"胸部","meshNodeIdsByGender":{"MALE":["chest_left","chest_right"],"FEMALE":["chest_left","chest_right","sports_bra_left","sports_bra_right"]}},
+  {"regionId":"shoulders","muscleGroupId":"shoulders","displayNameZh":"肩部","meshNodeIdsByGender":{"MALE":["shoulders_left","shoulders_right"],"FEMALE":["shoulders_left","shoulders_right"]}},
+  {"regionId":"back","muscleGroupId":"back","displayNameZh":"背部","meshNodeIdsByGender":{"MALE":["torso"],"FEMALE":["torso"]}},
+  {"regionId":"biceps","muscleGroupId":"biceps","displayNameZh":"肱二头肌","meshNodeIdsByGender":{"MALE":["biceps_left","biceps_right"],"FEMALE":["biceps_left","biceps_right"]}},
+  {"regionId":"triceps","muscleGroupId":"triceps","displayNameZh":"肱三头肌","meshNodeIdsByGender":{"MALE":["triceps_left","triceps_right"],"FEMALE":["triceps_left","triceps_right"]}},
+  {"regionId":"forearms","muscleGroupId":"forearms","displayNameZh":"前臂","meshNodeIdsByGender":{"MALE":["forearms_left","forearms_right"],"FEMALE":["forearms_left","forearms_right"]}},
+  {"regionId":"abs","muscleGroupId":"abs","displayNameZh":"腹部","meshNodeIdsByGender":{"MALE":["abs"],"FEMALE":["abs"]}},
+  {"regionId":"glutes","muscleGroupId":"glutes","displayNameZh":"臀部","meshNodeIdsByGender":{"MALE":["glutes_left","glutes_right"],"FEMALE":["glutes_left","glutes_right"]}},
+  {"regionId":"quadriceps","muscleGroupId":"quadriceps","displayNameZh":"股四头肌","meshNodeIdsByGender":{"MALE":["quadriceps_left","quadriceps_right"],"FEMALE":["quadriceps_left","quadriceps_right"]}},
+  {"regionId":"hamstrings","muscleGroupId":"hamstrings","displayNameZh":"腘绳肌","meshNodeIdsByGender":{"MALE":["hamstrings_left","hamstrings_right"],"FEMALE":["hamstrings_left","hamstrings_right"]}},
+  {"regionId":"calves","muscleGroupId":"calves","displayNameZh":"小腿","meshNodeIdsByGender":{"MALE":["calves_left","calves_right"],"FEMALE":["calves_left","calves_right"]}}
+]

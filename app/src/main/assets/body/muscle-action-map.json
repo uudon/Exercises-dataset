@@ -1,0 +1,13 @@
+[
+  {"muscleGroupId":"chest","primaryExerciseIds":["1273"],"secondaryExerciseIds":["0259"]},
+  {"muscleGroupId":"shoulders","primaryExerciseIds":["0286"],"secondaryExerciseIds":["1273"]},
+  {"muscleGroupId":"back","primaryExerciseIds":["0293"],"secondaryExerciseIds":[]},
+  {"muscleGroupId":"biceps","primaryExerciseIds":["0285"],"secondaryExerciseIds":["0293"]},
+  {"muscleGroupId":"triceps","primaryExerciseIds":["0259"],"secondaryExerciseIds":["0286"]},
+  {"muscleGroupId":"forearms","primaryExerciseIds":[],"secondaryExerciseIds":["0285","0293"]},
+  {"muscleGroupId":"abs","primaryExerciseIds":["0001"],"secondaryExerciseIds":[]},
+  {"muscleGroupId":"glutes","primaryExerciseIds":["0295"],"secondaryExerciseIds":["1760"]},
+  {"muscleGroupId":"quadriceps","primaryExerciseIds":["1760"],"secondaryExerciseIds":["0295"]},
+  {"muscleGroupId":"hamstrings","primaryExerciseIds":[],"secondaryExerciseIds":["0295"]},
+  {"muscleGroupId":"calves","primaryExerciseIds":["1373"],"secondaryExerciseIds":["0295"]}
+]

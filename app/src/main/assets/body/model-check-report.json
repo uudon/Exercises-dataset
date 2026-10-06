@@ -1,0 +1,13 @@
+{
+  "valid": false,
+  "errors": [
+    "model manifest licenseStatus is unconfirmed for MALE and FEMALE",
+    "APK redistribution authorization is blocked for MALE and FEMALE",
+    "formal source URL, source version, and independent APK distribution evidence are not supplied"
+  ],
+  "modelCount": 2,
+  "totalBytes": 1535812,
+  "mappingStatus": "explicit-region-and-action-mapping-recorded",
+  "licenseStatus": "blocked",
+  "deviceEvidenceStatus": "not-run"
+}
