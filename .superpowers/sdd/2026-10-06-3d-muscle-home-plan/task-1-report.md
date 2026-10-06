@@ -5,8 +5,10 @@
 `DONE_WITH_CONCERNS`
 
 The supplied male and female GLBs are integrated into the offline asset tree
-and pass the file-integrity gate. The supplied README is the only provenance
-and licensing source used; no external authorization or metadata was invented.
+and pass the byte-integrity checks, but the release gate remains blocked. The
+supplied README/package terms are the only evidence recorded; the user's
+request to integrate the files is not treated as legal authorization, and no
+formal external authorization or metadata was invented.
 
 ## Changes
 
@@ -20,9 +22,9 @@ and licensing source used; no external authorization or metadata was invented.
 - Added `app/src/main/assets/body/male/body.glb` and
   `app/src/main/assets/body/female/body.glb` from the supplied local package.
 - Updated `app/src/main/assets/body/model-manifest.json` with actual byte sizes
-  and SHA-256 values, local-package provenance, README-based license and
-  attribution text, and redistribution authorization confirmed by the user's
-  explicit integration request.
+  and SHA-256 values, unresolved formal source URL/repository and
+  commit/version fields, README/package-terms-only license and attribution
+  text, and blocked formal APK redistribution authorization.
 - Updated `NOTICE.md` because its previous “not included” statement became
   false after the supplied assets were integrated.
 - Added `tools/verify-body-models.sh`. It emits a JSON report to stdout and
@@ -45,8 +47,10 @@ muscle-level hit mapping for those groups.
 
 - `./gradlew :app:testDebugUnitTest --tests '*BodyModelValidatorTest'` — passed
   (`BUILD SUCCESSFUL`).
-- `tools/verify-body-models.sh` — passed with `valid: true`, `modelCount: 2`,
-  and `totalBytes: 1487700`.
+- `tools/verify-body-models.sh` — failed as required for the release gate;
+  it reported `valid: false`, `modelCount: 2`, and `totalBytes: 1487700`,
+  with unresolved source URL/repository, source commit/version, unconfirmed
+  license status, and blocked APK redistribution authorization for both models.
 - `git diff --check` — passed.
 
 The model verifier covers manifest and byte-integrity checks; it does not
@@ -61,5 +65,7 @@ cache outside the workspace. Existing unrelated Gradle warnings remain.
   supplied model's generic `upper_arm`/`thigh` regions.
 - Rendering Spike, API 26/new-device loading, frame-rate, PSS, APK delta, and
   lifecycle measurements remain unexecuted.
-- The supplied package provides no commit/version or external URL; provenance
-  is therefore recorded as the local package path only.
+- Formal source URL/repository and source commit/version remain unresolved.
+- APK redistribution authorization remains blocked: the README/package terms
+  state that distribution is permitted, but no formal external authorization
+  was supplied. The user's integration request is not legal evidence.
